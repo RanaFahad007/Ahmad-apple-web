@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useCartStore } from '../store/useStore.js';
-import { get, post, formatPKR, imgFallback, usePageTitle } from '../lib/api.js';
+import { get, post, formatPKR, imgFallback, usePageTitle, getOptimizedUrl } from '../lib/api.js';
 import { Empty } from '../components/ui.jsx';
 
 export default function Cart() {
@@ -40,7 +40,7 @@ export default function Cart() {
             return (
               <div key={i.key} className="card flex gap-4 p-4">
                 <Link to={`/product/${i.slug}`} className="shrink-0 rounded-[16px] bg-[var(--card2)] p-2">
-                  <img src={i.image} onError={imgFallback} alt={i.name} className="h-24 w-24 rounded-[12px] object-cover" />
+                  <img src={getOptimizedUrl(i.image, 150)} onError={imgFallback} alt={i.name} loading="lazy" width={96} height={96} className="h-24 w-24 rounded-[12px] object-cover" />
                 </Link>
                 <div className="flex-1 min-w-0">
                   <Link to={`/product/${i.slug}`} className="font-semibold hover:text-[#007aff]">{i.name}</Link>

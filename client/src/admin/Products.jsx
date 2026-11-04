@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { get, post, put, del, formatPKR } from '../lib/api.js';
+import { get, post, put, del, formatPKR, imageUrl } from '../lib/api.js';
+import ImageUploader from './ImageUploader.jsx';
 
 export function ProductList() {
   const [products, setProducts] = useState([]);
@@ -66,54 +67,36 @@ export function ProductList() {
   );
 }
 
-const EMPTY_FORM = { name: '', slug: '', brandName: 'Apple', category: '', price: '', salePrice: '', stock: '', sku: '', description: '', images: '', isFeatured: false, isActive: true };
+const EMPTY_FORM = { name: '', slug: '', brandName: 'Apple', category: '', price: '', salePrice: '', stock: '', sku: '', description: '', images: [], isFeatured: false, isActive: true };
 
 export function ProductForm({ id }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
-  const [files, setFiles] = useState([]);
-  const [previews, setPreviews] = useState([]);
+  const [uploading, setUploading] = useState(false);
   useEffect(() => { get('/categories').then((r) => setCategories(r.data || [])).catch(() => {}); }, []);
   useEffect(() => {
     if (!id || id === 'new') return;
     // Single-product fetch (new server route) instead of downloading 100 products to find one.
     get(`/admin/products/${id}`).then((r) => {
       const p = r.data;
-      if (p) setForm({ ...EMPTY_FORM, ...p, category: p.category?._id || p.category || '', images: (p.images || []).join('\n'), price: String(p.price), salePrice: String(p.salePrice || ''), stock: String(p.stock) });
+      if (p) setForm({ ...EMPTY_FORM, ...p, category: p.category?._id || p.category || '', images: (p.images || []).map((img) => ({ url: imageUrl(img), publicId: img?.publicId || '' })), price: String(p.price), salePrice: String(p.salePrice || ''), stock: String(p.stock) });
     }).catch((e) => toast.error(e.message));
   }, [id]);
 
-  const onFiles = (e) => {
-    const list = Array.from(e.target.files || []);
-    setFiles(list);
-    setPreviews(list.map((f) => URL.createObjectURL(f)));
-  };
-  const moveImage = (idx, dir) => {
-    const lines = form.images.split('\n').filter(Boolean);
-    const next = [...lines];
-    const j = idx + dir;
-    if (j < 0 || j >= next.length) return;
-    [next[idx], next[j]] = [next[j], next[idx]];
-    setForm({ ...form, images: next.join('\n') });
-  };
 
   const submit = async (e) => {
     e.preventDefault();
     try {
-      let uploaded = [];
-      if (files.length) {
-        const fd = new FormData();
-        files.forEach((f) => fd.append('images', f));
-        const res = await post('/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-        uploaded = res.data || [];
-      }
+      // Images were already uploaded straight to Cloudinary by
+      // <ImageUploader /> — this save sends only URLs/publicIds as JSON,
+      // so it can never hit Vercel's 4.5MB payload limit.
       const payload = {
         ...form,
         price: Number(form.price),
         salePrice: Number(form.salePrice || 0),
         stock: Number(form.stock || 0),
-        images: [...form.images.split('\n').filter(Boolean), ...uploaded],
+        images: form.images,
       };
       if (id && id !== 'new') await put(`/admin/products/${id}`, payload);
       else await post('/admin/products', payload);
@@ -140,27 +123,14 @@ export function ProductForm({ id }) {
       <textarea className="field" rows={4} placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
       <div>
         <p className="font-semibold">Images</p>
-        <p className="text-xs text-[var(--muted)]">Paste image URLs (one per line), or upload from your phone — tap the button, pick from gallery/camera, then Save Product to upload them. Use ↑ / ↓ to reorder URL images.</p>
-        <textarea className="field mt-2" rows={3} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
-        <div className="mt-2 flex flex-wrap gap-2">
-          {form.images.split('\n').filter(Boolean).map((src, i) => (
-            <span key={i} className="flex items-center gap-1 rounded-full bg-[var(--card)] px-2 py-1 text-xs ">
-              {i + 1}. {src.slice(0, 30)}…
-              <button type="button" onClick={() => moveImage(i, -1)}>↑</button>
-              <button type="button" onClick={() => moveImage(i, 1)}>↓</button>
-            </span>
-          ))}
+        <p className="text-xs text-[var(--muted)]">Tap 📷, pick from gallery/camera (even 3–5MB phone photos — they are compressed and uploaded straight to Cloudinary). Drag or use ↑ / ↓ to reorder; the first image is the main image.</p>
+        <div className="mt-2">
+          <ImageUploader images={form.images} onChange={(images) => setForm({ ...form, images })} folder="products" deleteOnRemove onBusyChange={setUploading} buttonLabel="📷 Add product images" />
         </div>
-        <label className="btn-outline mt-3 inline-block cursor-pointer">
-          📷 Upload product images from phone
-          <input className="hidden" type="file" accept="image/*" multiple onChange={onFiles} />
-        </label>
-        {files.length > 0 && <p className="mt-2 text-sm">{files.length} image(s) selected — will upload when you save.</p>}
-        <div className="mt-2 flex flex-wrap gap-2">{previews.map((src, i) => <img key={i} src={src} alt="" className="h-20 w-20 rounded-xl object-cover" />)}</div>
       </div>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} /> Featured</label>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} /> Active / visible on site</label>
-      <button className="btn">Save Product</button>
+      <button className="btn" disabled={uploading}>{uploading ? "Uploading images…" : "Save Product"}</button>
     </form>
   );
 }

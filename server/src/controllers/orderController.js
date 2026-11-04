@@ -3,6 +3,7 @@ import Product from '../models/Product.js';
 import Coupon from '../models/Coupon.js';
 import Settings from '../models/Settings.js';
 import { AppError, asyncHandler, pagedResult, parsePagination, sendSuccess } from '../utils/helpers.js';
+import { imageUrl, normalizeImage } from '../utils/images.js';
 
 async function getSettings() {
   return (await Settings.findOne()) || {};
@@ -25,7 +26,7 @@ export const createOrder = asyncHandler(async (req, res) => {
     orderItems.push({
       product: product._id,
       name: product.name,
-      image: product.images?.[0] || '',
+      image: imageUrl(product.images?.[0]),
       price,
       quantity: item.quantity,
       color: item.color || '',
@@ -56,7 +57,7 @@ export const createOrder = asyncHandler(async (req, res) => {
     items: orderItems,
     shippingAddress,
     paymentMethod: paymentMethod || 'COD',
-    paymentScreenshot: paymentScreenshot || req.body.uploadedImages?.[0] || '',
+    paymentScreenshot: imageUrl(normalizeImage(paymentScreenshot)),
     couponCode: couponCode || '',
     discount,
     deliveryCharge,

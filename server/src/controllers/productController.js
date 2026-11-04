@@ -2,6 +2,8 @@ import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import Review from '../models/Review.js';
 import { AppError, asyncHandler, pagedResult, parsePagination, sendSuccess, slugify } from '../utils/helpers.js';
+import { normalizeImages, ownedPublicIds } from '../utils/images.js';
+import { deleteCloudinaryImages } from './uploadController.js';
 
 function buildFilters(q) {
   const filter = { isActive: true };
@@ -91,12 +93,10 @@ function productPayload(body) {
   if (typeof body.variants === 'string') {
     try { data.variants = JSON.parse(body.variants); } catch { data.variants = []; }
   }
-  if (typeof body.images === 'string') {
-    try { data.images = JSON.parse(body.images); } catch { data.images = body.images ? [body.images] : []; }
-  }
-  if (body.uploadedImages?.length) {
-    data.images = [...(Array.isArray(data.images) ? data.images : []), ...body.uploadedImages];
-  }
+  // Images arrive as JSON only — never as files (direct upload to
+  // Cloudinary from the browser). Accept [{url, publicId}], a single
+  // {url, publicId}, or plain URL strings (pasted links / old data).
+  if (body.images !== undefined) data.images = normalizeImages(body.images);
   return data;
 }
 
@@ -106,17 +106,27 @@ export const createProduct = asyncHandler(async (req, res) => {
 });
 
 export const updateProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findByIdAndUpdate(req.params.id, productPayload(req.body), {
+  const previous = await Product.findById(req.params.id);
+  if (!previous) throw new AppError('Product not found', 404);
+  const payload = productPayload(req.body);
+  const product = await Product.findByIdAndUpdate(req.params.id, payload, {
     new: true,
     runValidators: true,
   });
-  if (!product) throw new AppError('Product not found', 404);
+  // Images removed from the product in this edit are deleted from
+  // Cloudinary too, so orphaned files do not pile up.
+  if (req.body.images !== undefined) {
+    const kept = new Set(ownedPublicIds(payload.images));
+    const removed = ownedPublicIds(previous.images).filter((id) => !kept.has(id));
+    await deleteCloudinaryImages(removed);
+  }
   return sendSuccess(res, product, 'Product updated');
 });
 
 export const deleteProduct = asyncHandler(async (req, res) => {
   const product = await Product.findByIdAndDelete(req.params.id);
   if (!product) throw new AppError('Product not found', 404);
+  await deleteCloudinaryImages(ownedPublicIds(product.images));
   return sendSuccess(res, null, 'Product deleted');
 });
 
@@ -127,6 +137,10 @@ export const duplicateProduct = asyncHandler(async (req, res) => {
   original.name = `${original.name} (Copy)`;
   original.slug = `${original.slug}-copy-${Date.now()}`;
   original.sku = original.sku ? `${original.sku}-COPY` : '';
+  // The copy points at the same URLs but owns no Cloudinary files: keep the
+  // url, clear publicId, so deleting one product never deletes the other's
+  // images.
+  original.images = normalizeImages(original.images).map((i) => ({ url: i.url, publicId: '' }));
   const copy = await Product.create(original);
   return sendSuccess(res, copy, 'Product duplicated', 201);
 });
@@ -134,6 +148,8 @@ export const duplicateProduct = asyncHandler(async (req, res) => {
 export const bulkDeleteProducts = asyncHandler(async (req, res) => {
   const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
   if (!ids.length) throw new AppError('No product ids provided', 400);
+  const docs = await Product.find({ _id: { $in: ids } }).select('images');
   await Product.deleteMany({ _id: { $in: ids } });
+  await deleteCloudinaryImages(docs.flatMap((d) => ownedPublicIds(d.images)));
   return sendSuccess(res, { deleted: ids.length }, 'Products deleted');
 });

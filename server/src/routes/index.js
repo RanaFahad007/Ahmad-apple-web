@@ -3,11 +3,11 @@ import rateLimit from 'express-rate-limit';
 import { body } from 'express-validator';
 import { validate } from '../middleware/validate.js';
 import { protect, adminOnly } from '../middleware/auth.js';
-import { upload, uploadToCloudinary } from '../middleware/upload.js';
 import * as auth from '../controllers/authController.js';
 import * as products from '../controllers/productController.js';
 import * as orders from '../controllers/orderController.js';
 import * as misc from '../controllers/miscController.js';
+import * as upload from '../controllers/uploadController.js';
 
 const router = express.Router();
 
@@ -20,6 +20,13 @@ const adminLoginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: { success: false, message: 'Too many admin login attempts, try again later', data: null },
+});
+// Payment-screenshot signatures are for logged-in users only, payments
+// folder only, and rate-limited so the endpoint cannot be farmed.
+const paymentSignatureLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { success: false, message: 'Too many upload requests, try again later', data: null },
 });
 
 // Auth
@@ -52,28 +59,32 @@ router.post('/cart', protect, misc.saveCart);
 router.post('/orders', protect, orders.createOrder);
 router.get('/orders/my', protect, orders.myOrders);
 router.get('/orders/:id', protect, orders.getOrder);
-router.post('/upload', protect, adminOnly, upload.array('images', 8), uploadToCloudinary, (req, res) =>
-  res.json({ success: true, message: 'Uploaded', data: req.body.uploadedImages || [] })
-);
+// Direct-upload signature for a customer's payment screenshot (Bank
+// Transfer etc.): logged-in users only, folder is forced to "payments".
+router.get('/upload-signature-payments', protect, paymentSignatureLimiter, upload.paymentUploadSignature);
 
 // Admin: every route below is protected by protect + adminOnly on the server,
 // regardless of whether the /admin-ahmad URL is hidden from the public site.
 router.use('/admin', protect, adminOnly);
+// Signed direct-upload: the browser uploads straight to Cloudinary, so this
+// server never receives image bytes (no Multer, no 4.5MB Vercel limit).
+router.get('/admin/upload-signature', upload.adminUploadSignature);
+router.delete('/admin/images', upload.deleteImage);
 router.get('/admin/dashboard', misc.adminDashboard);
 router.get('/admin/products', products.adminListProducts);
 router.get('/admin/products/:id', products.adminGetProduct);
-router.post('/admin/products', upload.array('images', 8), uploadToCloudinary, products.createProduct);
-router.put('/admin/products/:id', upload.array('images', 8), uploadToCloudinary, products.updateProduct);
+router.post('/admin/products', products.createProduct);
+router.put('/admin/products/:id', products.updateProduct);
 router.delete('/admin/products/:id', products.deleteProduct);
 router.post('/admin/products/:id/duplicate', products.duplicateProduct);
 router.post('/admin/products/bulk-delete', products.bulkDeleteProducts);
 router.get('/admin/categories', misc.categories.list);
-router.post('/admin/categories', upload.single('image'), uploadToCloudinary, misc.categories.create);
-router.put('/admin/categories/:id', upload.single('image'), uploadToCloudinary, misc.categories.update);
+router.post('/admin/categories', misc.categories.create);
+router.put('/admin/categories/:id', misc.categories.update);
 router.delete('/admin/categories/:id', misc.categories.remove);
 router.get('/admin/brands', misc.brands.list);
-router.post('/admin/brands', upload.single('image'), uploadToCloudinary, misc.brands.create);
-router.put('/admin/brands/:id', upload.single('image'), uploadToCloudinary, misc.brands.update);
+router.post('/admin/brands', misc.brands.create);
+router.put('/admin/brands/:id', misc.brands.update);
 router.delete('/admin/brands/:id', misc.brands.remove);
 router.get('/admin/orders', orders.adminListOrders);
 router.put('/admin/orders/:id', orders.updateOrder);
@@ -88,11 +99,11 @@ router.post('/admin/coupons', misc.coupons.create);
 router.put('/admin/coupons/:id', misc.coupons.update);
 router.delete('/admin/coupons/:id', misc.coupons.remove);
 router.get('/admin/banners', misc.banners.list);
-router.post('/admin/banners', upload.single('image'), uploadToCloudinary, misc.banners.create);
-router.put('/admin/banners/:id', upload.single('image'), uploadToCloudinary, misc.banners.update);
+router.post('/admin/banners', misc.banners.create);
+router.put('/admin/banners/:id', misc.banners.update);
 router.delete('/admin/banners/:id', misc.banners.remove);
 router.get('/admin/messages', misc.messages.list);
 router.delete('/admin/messages/:id', misc.messages.remove);
-router.put('/admin/settings', upload.single('image'), uploadToCloudinary, misc.updateSettings);
+router.put('/admin/settings', misc.updateSettings);
 
 export default router;

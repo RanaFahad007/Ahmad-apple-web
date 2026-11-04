@@ -10,11 +10,15 @@ import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Cart from '../models/Cart.js';
 import { AppError, asyncHandler, pagedResult, parsePagination, sendSuccess, slugify } from '../utils/helpers.js';
+import { normalizeImage, ownedPublicIds } from '../utils/images.js';
+import { deleteCloudinaryImages } from './uploadController.js';
 
 function withSlug(body) {
   const data = { ...body };
   if (body.name && !body.slug) data.slug = slugify(body.name);
-  if (body.uploadedImages?.length) data.image = body.uploadedImages[0];
+  // Single images arrive as JSON {url, publicId} from direct upload, or as
+  // a pasted URL string. Never as a file.
+  if (body.image !== undefined) data.image = normalizeImage(body.image);
   return data;
 }
 
@@ -40,6 +44,7 @@ function crud(Model, label) {
     remove: asyncHandler(async (req, res) => {
       const doc = await Model.findByIdAndDelete(req.params.id);
       if (!doc) throw new AppError(`${label} not found`, 404);
+      if (doc.image) await deleteCloudinaryImages(ownedPublicIds([doc.image]));
       return sendSuccess(res, null, `${label} deleted`);
     }),
   };
@@ -88,7 +93,7 @@ export const updateSettings = asyncHandler(async (req, res) => {
       data[key] = req.body[key];
     }
   }
-  if (req.body.uploadedImages?.length) data.logo = req.body.uploadedImages[0];
+  if (req.body.logo !== undefined && typeof req.body.logo === 'object' && req.body.logo !== null) data.logo = req.body.logo.url || '';
   const settings = await Settings.findOneAndUpdate({}, data, { new: true, upsert: true, runValidators: true });
   return sendSuccess(res, settings, 'Settings updated');
 });

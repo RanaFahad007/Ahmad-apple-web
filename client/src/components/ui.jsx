@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { formatPKR, imgFallback } from '../lib/api.js';
+import { formatPKR, imgFallback, imageUrl, getOptimizedUrl } from '../lib/api.js';
 import { ACCENTS, applyTheme, getAccent, getTheme } from '../lib/theme.js';
 import { useAuthStore, useWishlistStore } from '../store/useStore.js';
 
@@ -57,10 +57,12 @@ export function ProductCard({ product }) {
     <article className="card group overflow-hidden transition hover:shadow-lg">
       <Link to={`/product/${product.slug}`} className="block bg-[var(--card2)] p-3">
         <img
-          src={product.images?.[0] || ''}
+          src={getOptimizedUrl(imageUrl(product.images?.[0]), 400)}
           onError={imgFallback}
           alt={product.name}
           loading="lazy"
+          width={400}
+          height={400}
           className="aspect-square w-full rounded-[16px] object-cover transition duration-300 group-hover:scale-105"
         />
       </Link>

@@ -23,7 +23,10 @@ const productSchema = new mongoose.Schema(
     salePrice: { type: Number, default: 0, min: 0 },
     stock: { type: Number, default: 0, min: 0 },
     sku: { type: String, default: '', index: true },
-    images: [{ type: String }],
+    // { url, publicId } for Cloudinary uploads; plain string URLs from old
+    // documents and pasted links still work (see utils/images.js). The first
+    // image is the main image.
+    images: [{ type: mongoose.Schema.Types.Mixed }],
     variants: [variantSchema],
     description: { type: String, default: '' },
     specs: { type: Map, of: String, default: {} },

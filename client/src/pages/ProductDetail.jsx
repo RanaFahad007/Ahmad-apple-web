@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { get, post, formatPKR, imgFallback, usePageTitle } from '../lib/api.js';
+import { get, post, formatPKR, imgFallback, usePageTitle, imageUrl, getOptimizedUrl } from '../lib/api.js';
 import { useAuthStore, useCartStore, useWishlistStore } from '../store/useStore.js';
 import { Empty, ProductCard, Stars } from '../components/ui.jsx';
 
@@ -75,12 +75,12 @@ export default function ProductDetail() {
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
           <div className="overflow-hidden rounded-[24px] bg-[var(--card2)] p-4" onClick={() => setZoom(!zoom)}>
-            <img src={product.images?.[image] || ''} onError={imgFallback} alt={product.name} className={`w-full cursor-zoom-in rounded-[16px] object-cover transition ${zoom ? 'scale-150' : 'aspect-square'}`} />
+            <img src={getOptimizedUrl(imageUrl(product.images?.[image]), 1000)} onError={imgFallback} alt={product.name} width={1000} height={1000} className={`w-full cursor-zoom-in rounded-[16px] object-cover transition ${zoom ? 'scale-150' : 'aspect-square'}`} />
           </div>
           <div className="mt-3 flex gap-2 overflow-x-auto">
             {product.images?.map((src, i) => (
               <button key={i} onClick={() => setImage(i)} className={`shrink-0 overflow-hidden rounded-2xl border-2 ${image === i ? 'border-[#007aff]' : 'border-transparent'}`}>
-                <img src={src} onError={imgFallback} alt="" className="h-20 w-20 object-cover" />
+                <img src={getOptimizedUrl(imageUrl(src), 150)} onError={imgFallback} alt="" loading="lazy" width={150} height={150} className="h-20 w-20 object-cover" />
               </button>
             ))}
           </div>

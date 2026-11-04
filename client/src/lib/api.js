@@ -26,7 +26,7 @@ api.interceptors.response.use(
 export const get = (url, params) => api.get(url, { params }).then((r) => r.data);
 export const post = (url, data, config) => api.post(url, data, config).then((r) => r.data);
 export const put = (url, data, config) => api.put(url, data, config).then((r) => r.data);
-export const del = (url) => api.delete(url).then((r) => r.data);
+export const del = (url, data) => api.delete(url, data ? { data } : {}).then((r) => r.data);
 export default api;
 
 export const formatPKR = (n) =>
@@ -36,6 +36,28 @@ export const imgFallback = (e) => {
   e.target.onerror = null;
   e.target.src = 'https://placehold.co/900x900/f5f5f7/111111?text=Apple+Ahmad';
 };
+
+// An image may be a plain URL string (old data, pasted links) or a
+// { url, publicId } object from Cloudinary direct upload.
+export function imageUrl(image) {
+  if (!image) return '';
+  if (typeof image === 'string') return image;
+  return image.url || '';
+}
+
+export function publicIdOf(image) {
+  if (!image || typeof image === 'string') return '';
+  return image.publicId || '';
+}
+
+// Cloudinary delivery optimisation: insert f_auto,q_auto,w_{width} right
+// after "/upload/" so the browser downloads a right-sized file instead of
+// the full original. Non-Cloudinary URLs are returned unchanged.
+export function getOptimizedUrl(url, width) {
+  if (!url || !url.includes('/upload/')) return url || '';
+  if (/\/upload\/f_auto/.test(url)) return url;
+  return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+}
 
 export function usePageTitle(title) {
   if (typeof document !== 'undefined') document.title = `${title} — Apple Ahmad`;

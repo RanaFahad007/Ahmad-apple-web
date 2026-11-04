@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { get, imgFallback, usePageTitle } from '../lib/api.js';
+import { get, imgFallback, usePageTitle, imageUrl, getOptimizedUrl } from '../lib/api.js';
 import { ProductCard, Skeleton } from '../components/ui.jsx';
 
 export default function Home() {
@@ -31,7 +31,7 @@ export default function Home() {
   }, []);
 
   const hero = banners[0];
-  const heroImage = hero?.image || featured[0]?.images?.[0] || '';
+  const heroImage = imageUrl(hero?.image) || imageUrl(featured[0]?.images?.[0]);
   const arrivals = selectedCat
     ? featured.filter((p) => p.category?.slug === selectedCat || p.category?.name?.toLowerCase() === selectedCat)
     : featured;
@@ -52,7 +52,7 @@ export default function Home() {
           </div>
           {heroImage && (
             <div className="rounded-[20px] bg-[var(--card2)] p-4">
-              <img src={heroImage} onError={imgFallback} alt={hero?.title || 'Featured product'} className="aspect-[4/3] w-full rounded-[16px] object-cover" />
+              <img src={getOptimizedUrl(heroImage, 1000)} onError={imgFallback} alt={hero?.title || 'Featured product'} loading="lazy" width={1000} height={750} className="aspect-[4/3] w-full rounded-[16px] object-cover" />
             </div>
           )}
         </div>

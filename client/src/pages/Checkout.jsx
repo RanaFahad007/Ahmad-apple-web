@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { get, post, formatPKR, usePageTitle } from '../lib/api.js';
+import { get, post, formatPKR, usePageTitle, imageUrl } from '../lib/api.js';
+import ImageUploader from '../admin/ImageUploader.jsx';
 import { useAuthStore, useCartStore } from '../store/useStore.js';
 import { LoginGate } from '../components/ui.jsx';
 
@@ -12,7 +13,7 @@ export default function Checkout() {
   const [settings, setSettings] = useState({});
   const [form, setForm] = useState({ fullName: user?.name || '', phone: user?.phone || '', city: '', address: '' });
   const [paymentMethod, setPaymentMethod] = useState('COD');
-  const [screenshot, setScreenshot] = useState('');
+  const [screenshot, setScreenshot] = useState(null);
   const [coupon, setCoupon] = useState(() => sessionStorage.getItem('aa-coupon') || '');
   const [discount, setDiscount] = useState(0);
   const [couponAutoApplied, setCouponAutoApplied] = useState(false);
@@ -58,7 +59,7 @@ export default function Checkout() {
     e.preventDefault();
     if (!user) { toast.error('Please log in or register to place an order'); navigate('/login', { state: { from: '/checkout' } }); return; }
     if (paymentMethod !== 'COD' && !screenshot) {
-      toast.error('Please paste the payment screenshot URL (upload it in the admin upload flow, or send it on WhatsApp after ordering).');
+      toast.error('Please upload the payment screenshot below, or send it on WhatsApp after ordering.');
       return;
     }
     try {
@@ -102,13 +103,16 @@ export default function Checkout() {
           <div className="rounded-2xl bg-[var(--card)] p-4 text-sm ">
             <p className="font-semibold">Bank transfer details</p>
             <p>Bank: {settings.bankName || '—'} • Title: {settings.bankAccountTitle || '—'} • Account: {settings.bankAccountNumber || '—'}</p>
-            <p className="mt-1 text-[var(--muted)]">After transfer, paste the screenshot link below or send it on WhatsApp.</p>
+            <p className="mt-1 text-[var(--muted)]">After transfer, upload the screenshot below or send it on WhatsApp.</p>
           </div>
         )}
         {paymentMethod === 'Easypaisa' && <p className="text-sm">Easypaisa number: <b>{settings.easypaisaNumber || '—'}</b></p>}
         {paymentMethod === 'JazzCash' && <p className="text-sm">JazzCash number: <b>{settings.jazzcashNumber || '—'}</b></p>}
         {paymentMethod !== 'COD' && (
-          <input className="field" placeholder="Payment screenshot URL (optional if sending on WhatsApp)" value={screenshot} onChange={(e) => setScreenshot(e.target.value)} />
+          <div>
+            <p className="mb-2 text-sm font-semibold">Payment screenshot (optional if sending on WhatsApp)</p>
+            <ImageUploader images={screenshot ? [screenshot] : []} onChange={(imgs) => setScreenshot(imgs[0] || null)} folder="payments" signaturePath="/upload-signature-payments" multiple={false} buttonLabel="📷 Upload screenshot" />
+          </div>
         )}
         <button className="btn w-full">Place Order — {formatPKR(grandTotal)}</button>
         {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" className="btn-outline w-full">Order via WhatsApp instead</a>}

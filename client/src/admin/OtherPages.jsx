@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { get, post, put, del, formatPKR, imgFallback } from '../lib/api.js';
-import ImageUpload from './ImageUpload.jsx';
+import { get, post, put, del, formatPKR, imgFallback, imageUrl } from '../lib/api.js';
+import ImageUploader from './ImageUploader.jsx';
 
 function ListPage({ title, endpoint, fields, renderItem, imageUploadField }) {
   const [items, setItems] = useState([]);
@@ -18,8 +18,8 @@ function ListPage({ title, endpoint, fields, renderItem, imageUploadField }) {
       <form onSubmit={submit} className="card flex flex-wrap gap-2 p-4">
         {fields.map((f) => (
           <span key={f.key} className="flex flex-1 items-center gap-2" style={{ minWidth: '220px' }}>
-            <input className="field !w-auto flex-1" type={f.type || 'text'} placeholder={f.label} value={form[f.key] || ''} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} required={f.required} />
-            {imageUploadField === f.key && <ImageUpload value={form[f.key]} onUploaded={(url) => setForm({ ...form, [f.key]: url })} />}
+            <input className="field !w-auto flex-1" type={f.type || 'text'} placeholder={f.label} value={imageUploadField === f.key ? imageUrl(form[f.key]) : (form[f.key] || '')} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} required={f.required} />
+            {imageUploadField === f.key && <ImageUploader images={form[f.key] ? [{ url: imageUrl(form[f.key]), publicId: form[f.key]?.publicId || '' }] : []} onChange={(imgs) => setForm({ ...form, [f.key]: imgs[0] || '' })} folder="banners" multiple={false} deleteOnRemove buttonLabel="📷 Upload image" />}
           </span>
         ))}
         <button className="btn">Add</button>
@@ -51,8 +51,8 @@ export const CategoriesBrands = () => {
           <h2 className="font-bold">Add Category</h2>
           <input className="field" placeholder="Name" value={cat.name} onChange={(e) => setCat({ ...cat, name: e.target.value })} />
           <input className="field" placeholder="Slug (optional)" value={cat.slug} onChange={(e) => setCat({ ...cat, slug: e.target.value })} />
-          <input className="field" placeholder="Image URL" value={cat.image} onChange={(e) => setCat({ ...cat, image: e.target.value })} />
-          <ImageUpload value={cat.image} onUploaded={(url) => setCat({ ...cat, image: url })} buttonLabel="📷 Upload category image" />
+          <input className="field" placeholder="Image URL" value={imageUrl(cat.image)} onChange={(e) => setCat({ ...cat, image: e.target.value })} />
+          <ImageUploader images={cat.image ? [{ url: imageUrl(cat.image), publicId: cat.image?.publicId || '' }] : []} onChange={(imgs) => setCat({ ...cat, image: imgs[0] || '' })} folder="categories" multiple={false} deleteOnRemove buttonLabel="📷 Upload category image" />
           <button className="btn" onClick={async () => { await post('/admin/categories', cat); setCat({ name: '', slug: '', image: '' }); load(); toast.success('Category saved'); }}>Save Category</button>
           <div className="space-y-1">{cats.map((c) => <div key={c._id} className="flex justify-between text-sm"><span>{c.name} ({c.slug})</span><button className="text-red-600" onClick={async () => { await del(`/admin/categories/${c._id}`); load(); }}>Delete</button></div>)}</div>
         </div>
@@ -60,8 +60,8 @@ export const CategoriesBrands = () => {
           <h2 className="font-bold">Add Brand</h2>
           <input className="field" placeholder="Name" value={brand.name} onChange={(e) => setBrand({ ...brand, name: e.target.value })} />
           <input className="field" placeholder="Slug (optional)" value={brand.slug} onChange={(e) => setBrand({ ...brand, slug: e.target.value })} />
-          <input className="field" placeholder="Image URL" value={brand.image} onChange={(e) => setBrand({ ...brand, image: e.target.value })} />
-          <ImageUpload value={brand.image} onUploaded={(url) => setBrand({ ...brand, image: url })} buttonLabel="📷 Upload brand image" />
+          <input className="field" placeholder="Image URL" value={imageUrl(brand.image)} onChange={(e) => setBrand({ ...brand, image: e.target.value })} />
+          <ImageUploader images={brand.image ? [{ url: imageUrl(brand.image), publicId: brand.image?.publicId || '' }] : []} onChange={(imgs) => setBrand({ ...brand, image: imgs[0] || '' })} folder="brands" multiple={false} deleteOnRemove buttonLabel="📷 Upload brand image" />
           <button className="btn" onClick={async () => { await post('/admin/brands', brand); setBrand({ name: '', slug: '', image: '' }); load(); toast.success('Brand saved'); }}>Save Brand</button>
           <div className="space-y-1">{brands.map((b) => <div key={b._id} className="flex justify-between text-sm"><span>{b.name} ({b.slug})</span><button className="text-red-600" onClick={async () => { await del(`/admin/brands/${b._id}`); load(); }}>Delete</button></div>)}</div>
         </div>
@@ -241,8 +241,8 @@ export function SettingsPage() {
       <p className="text-sm text-[var(--muted)]">These values control the checkout: delivery charge and free-delivery limit set the order total, the WhatsApp number powers the “Order via WhatsApp” button, and the bank / Easypaisa / JazzCash numbers are shown to customers who choose those payment methods. Changing them needs no code change.</p>
       {fields.map((f) => (
         <label key={f} className="block text-sm font-medium capitalize">{f.replace(/([A-Z])/g, ' $1')}
-          <input className="field mt-1" type={(f === 'deliveryCharge' || f === 'freeDeliveryThreshold') ? 'number' : 'text'} value={form[f] ?? ''} onChange={(e) => setForm({ ...form, [f]: e.target.value })} />
-          {f === 'logo' && <span className="mt-2 inline-block"><ImageUpload value={form.logo} onUploaded={(url) => setForm({ ...form, logo: url })} buttonLabel="📷 Upload logo" /></span>}
+          <input className="field mt-1" type={(f === 'deliveryCharge' || f === 'freeDeliveryThreshold') ? 'number' : 'text'} value={f === 'logo' ? imageUrl(form[f]) : (form[f] ?? '')} onChange={(e) => setForm({ ...form, [f]: e.target.value })} />
+          {f === 'logo' && <span className="mt-2 block"><ImageUploader images={form.logo ? [{ url: imageUrl(form.logo), publicId: form.logo?.publicId || '' }] : []} onChange={(imgs) => setForm({ ...form, logo: imgs[0]?.url || '' })} folder="settings" multiple={false} buttonLabel="📷 Upload logo" /></span>}
         </label>
       ))}
       <button className="btn" disabled={saving}>{saving ? 'Saving…' : 'Save Settings'}</button>

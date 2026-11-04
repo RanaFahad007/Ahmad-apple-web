@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { imageUrl } from '../lib/api.js';
 import { persist } from 'zustand/middleware';
 
 export const useAuthStore = create(
@@ -32,7 +33,7 @@ export const useCartStore = create(
                 product: product._id,
                 name: product.name,
                 slug: product.slug,
-                image: product.images?.[0] || '',
+                image: imageUrl(product.images?.[0]),
                 price: product.salePrice > 0 ? product.salePrice : product.price,
                 quantity: opts.quantity || 1,
                 color: opts.color || '',
