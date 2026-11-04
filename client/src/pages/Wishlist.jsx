@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { get, usePageTitle } from '../lib/api.js';
-import { useWishlistStore } from '../store/useStore.js';
-import { Empty, ProductCard } from '../components/ui.jsx';
+import { useAuthStore, useWishlistStore } from '../store/useStore.js';
+import { Empty, LoginGate, ProductCard } from '../components/ui.jsx';
 
 export default function Wishlist() {
+  const user = useAuthStore((s) => s.user);
   const ids = useWishlistStore((s) => s.ids);
   const [products, setProducts] = useState([]);
   usePageTitle('Wishlist');
   useEffect(() => {
-    if (!ids.length) { setProducts([]); return; }
+    if (!user || !ids.length) { setProducts([]); return; }
     get('/products', { limit: 100 }).then((r) => setProducts((r.data || []).filter((p) => ids.includes(p._id)))).catch(() => {});
-  }, [ids]);
+  }, [user, ids]);
+  if (!user) return <LoginGate title="Wishlist" text="Apni wishlist dekhne aur items save karne ke liye pehle login ya register karein. Login ke baad aapki saved items yahan nazar aayengi." from="/wishlist" />;
   if (!products.length) return <div className="py-10"><Empty title="Wishlist is empty" text="Tap the heart on any product to save it here." /></div>;
   return (
     <div className="py-6">

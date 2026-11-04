@@ -11,6 +11,9 @@ async function getSettings() {
 export const createOrder = asyncHandler(async (req, res) => {
   const { items, shippingAddress, paymentMethod, paymentScreenshot, couponCode } = req.body;
   if (!Array.isArray(items) || !items.length) throw new AppError('Cart is empty', 400);
+  // Registration is required for checkout: every order must be linked to a
+  // registered user so their record (and order history) is saved.
+  if (!req.user) throw new AppError('Please log in or register to place an order', 401);
   const settings = await getSettings();
   let subtotal = 0;
   const orderItems = [];
@@ -48,7 +51,7 @@ export const createOrder = asyncHandler(async (req, res) => {
       : settings.deliveryCharge ?? 300;
   const total = subtotal - discount + deliveryCharge;
   const order = await Order.create({
-    user: req.user?._id,
+    user: req.user._id,
     orderNumber: `AA-${Date.now()}`,
     items: orderItems,
     shippingAddress,
@@ -59,8 +62,8 @@ export const createOrder = asyncHandler(async (req, res) => {
     deliveryCharge,
     subtotal,
     total,
-    customerName: shippingAddress?.fullName || req.user?.name || 'Guest',
-    customerEmail: req.user?.email || '',
+    customerName: shippingAddress?.fullName || req.user.name,
+    customerEmail: req.user.email,
   });
   return sendSuccess(res, order, 'Order placed', 201);
 });

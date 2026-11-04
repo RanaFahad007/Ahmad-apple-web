@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { get, post, formatPKR, usePageTitle } from '../lib/api.js';
 import { useAuthStore, useCartStore } from '../store/useStore.js';
+import { LoginGate } from '../components/ui.jsx';
 
 export default function Checkout() {
   const { items, total, clear } = useCartStore();
@@ -19,10 +20,14 @@ export default function Checkout() {
 
   useEffect(() => {
     get('/settings').then((r) => setSettings(r.data || {})).catch(() => {});
-    if (!user) { /* Guests can still check out; the order is saved without a user link. */ }
   }, [user]);
 
   if (!items.length) return <p className="py-10 text-center">Your cart is empty. <a href="/shop" className="text-accent">Shop now</a></p>;
+
+  // Checkout requires a registered account, so every order is saved
+  // against that user's record (and shows in their order history).
+  // The bag itself stays open to guests — it only becomes an order after login.
+  if (!user) return <LoginGate title="Checkout" text="Order place karne ke liye pehle login ya register karein, taake aapka record aur order history hamare paas save rahe. Aapka bag mehfooz rahega, login ke baad aap isi checkout par wapas aa jayenge." from="/checkout" />;
 
   const subtotal = total();
   const delivery = subtotal - discount >= (settings.freeDeliveryThreshold || 50000) ? 0 : (settings.deliveryCharge ?? 300);
@@ -51,6 +56,7 @@ export default function Checkout() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!user) { toast.error('Please log in or register to place an order'); navigate('/login', { state: { from: '/checkout' } }); return; }
     if (paymentMethod !== 'COD' && !screenshot) {
       toast.error('Please paste the payment screenshot URL (upload it in the admin upload flow, or send it on WhatsApp after ordering).');
       return;

@@ -1,8 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { formatPKR, imgFallback } from '../lib/api.js';
 import { ACCENTS, applyTheme, getAccent, getTheme } from '../lib/theme.js';
-import { useWishlistStore } from '../store/useStore.js';
+import { useAuthStore, useWishlistStore } from '../store/useStore.js';
+
+export function LoginGate({ title, text, from }) {
+  return (
+    <div className="mx-auto max-w-md py-10 text-center">
+      <h1 className="text-3xl font-extrabold">{title}</h1>
+      <p className="mt-2 text-sm text-[var(--muted)]">{text}</p>
+      <div className="card mt-5 space-y-3 p-5">
+        <Link to="/login" state={{ from }} className="btn w-full">Login</Link>
+        <Link to="/register" state={{ from }} className="btn-outline w-full">Create account</Link>
+      </div>
+    </div>
+  );
+}
 
 export function Stars({ value = 0 }) {
   return (
@@ -27,8 +41,18 @@ export function Empty({ title, text }) {
 
 export function ProductCard({ product }) {
   const { ids, toggle } = useWishlistStore();
+  const user = useAuthStore((s) => s.user);
+  const navigate = useNavigate();
   const wished = ids.includes(product._id);
   const price = product.salePrice > 0 ? product.salePrice : product.price;
+  const onWish = () => {
+    if (!user) {
+      toast.error('Wishlist ke liye pehle login ya register karein');
+      navigate('/login', { state: { from: `/product/${product.slug}` } });
+      return;
+    }
+    toggle(product._id);
+  };
   return (
     <article className="card group overflow-hidden transition hover:shadow-lg">
       <Link to={`/product/${product.slug}`} className="block bg-[var(--card2)] p-3">
@@ -46,7 +70,7 @@ export function ProductCard({ product }) {
             {product.name}
           </Link>
           <button
-            onClick={() => toggle(product._id)}
+            onClick={onWish}
             aria-label="Toggle wishlist"
             className={`shrink-0 rounded-full px-2.5 py-1 text-sm ${wished ? 'text-red-500' : 'text-[var(--text)]'}`}
           >

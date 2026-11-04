@@ -70,7 +70,7 @@ export default function ProductDetail() {
       {/* Back + wishlist, like the mockup */}
       <div className="flex items-center justify-between">
         <button onClick={() => navigate(-1)} aria-label="Back" className="rounded-full bg-[var(--card)] px-4 py-2 text-lg">‹</button>
-        <button onClick={() => toggleWish(product._id)} aria-label="Toggle wishlist" className={`rounded-full bg-[var(--card)] px-4 py-2 text-lg ${wished ? 'text-red-500' : 'text-[var(--text)]'}`}>{wished ? '♥' : '♡'}</button>
+        <button onClick={() => { if (!user) { toast.error('Wishlist ke liye pehle login ya register karein'); navigate('/login', { state: { from: `/product/${product.slug}` } }); return; } toggleWish(product._id); }} aria-label="Toggle wishlist" className={`rounded-full bg-[var(--card)] px-4 py-2 text-lg ${wished ? 'text-red-500' : 'text-[var(--text)]'}`}>{wished ? '♥' : '♡'}</button>
       </div>
       <div className="grid gap-8 lg:grid-cols-2">
         <div>

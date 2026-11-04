@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { post, usePageTitle } from '../lib/api.js';
 import { useAuthStore } from '../store/useStore.js';
@@ -8,6 +8,8 @@ export function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const setAuth = useAuthStore((s) => s.setAuth);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || '/profile';
   usePageTitle('Login');
   const submit = async (e) => {
     e.preventDefault();
@@ -15,7 +17,7 @@ export function Login() {
       const res = await post('/auth/login', form);
       setAuth(res.data.user, res.data.token);
       toast.success(`Welcome back, ${res.data.user.name}`);
-      navigate('/profile');
+      navigate(from);
     } catch (err) { toast.error(err.message); }
   };
   return (
@@ -26,7 +28,7 @@ export function Login() {
         <input className="field" type="password" placeholder="Password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
         <button className="btn w-full">Login</button>
         <p className="text-center text-sm text-[var(--muted)]">
-          <Link to="/forgot-password" className="text-accent">Forgot password?</Link> • No account? <Link to="/register" className="text-accent">Register</Link>
+          <Link to="/forgot-password" className="text-accent">Forgot password?</Link> • No account? <Link to="/register" state={{ from }} className="text-accent">Register</Link>
         </p>
       </form>
     </div>
@@ -37,6 +39,8 @@ export function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' });
   const setAuth = useAuthStore((s) => s.setAuth);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || '/profile';
   usePageTitle('Register');
   const submit = async (e) => {
     e.preventDefault();
@@ -44,7 +48,7 @@ export function Register() {
       const res = await post('/auth/register', form);
       setAuth(res.data.user, res.data.token);
       toast.success('Account created');
-      navigate('/profile');
+      navigate(from);
     } catch (err) { toast.error(err.message); }
   };
   return (
@@ -56,7 +60,7 @@ export function Register() {
         <input className="field" placeholder="Phone (optional)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         <input className="field" type="password" placeholder="Password (min 6 characters)" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
         <button className="btn w-full">Register</button>
-        <p className="text-center text-sm text-[var(--muted)]">Already have an account? <Link to="/login" className="text-accent">Login</Link></p>
+        <p className="text-center text-sm text-[var(--muted)]">Already have an account? <Link to="/login" state={{ from }} className="text-accent">Login</Link></p>
       </form>
     </div>
   );

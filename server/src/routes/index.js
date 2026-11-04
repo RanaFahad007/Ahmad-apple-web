@@ -2,7 +2,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { body } from 'express-validator';
 import { validate } from '../middleware/validate.js';
-import { protect, adminOnly, optionalAuth } from '../middleware/auth.js';
+import { protect, adminOnly } from '../middleware/auth.js';
 import { upload, uploadToCloudinary } from '../middleware/upload.js';
 import * as auth from '../controllers/authController.js';
 import * as products from '../controllers/productController.js';
@@ -49,7 +49,7 @@ router.post('/reviews', protect, misc.createReview);
 // Cart + orders (logged-in users)
 router.get('/cart', protect, misc.getCart);
 router.post('/cart', protect, misc.saveCart);
-router.post('/orders', optionalAuth, orders.createOrder);
+router.post('/orders', protect, orders.createOrder);
 router.get('/orders/my', protect, orders.myOrders);
 router.get('/orders/:id', protect, orders.getOrder);
 router.post('/upload', protect, adminOnly, upload.array('images', 8), uploadToCloudinary, (req, res) =>
