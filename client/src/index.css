@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { @apply bg-white text-neutral-900 antialiased; }
+.dark body { @apply bg-neutral-950 text-neutral-100; }
+input, select, textarea { @apply outline-none; }
+.field { @apply w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-neutral-700 dark:bg-neutral-900; }
+.btn { @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50; }
+.btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800; }
+.card { @apply rounded-3xl border border-neutral-100 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900; }
