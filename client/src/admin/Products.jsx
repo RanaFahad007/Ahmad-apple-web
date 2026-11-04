@@ -140,7 +140,7 @@ export function ProductForm({ id }) {
       <textarea className="field" rows={4} placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
       <div>
         <p className="font-semibold">Images</p>
-        <p className="text-xs text-[var(--muted)]">Paste image URLs (one per line), and/or upload new images below. Use ↑ / ↓ to reorder URL images.</p>
+        <p className="text-xs text-[var(--muted)]">Paste image URLs (one per line), or upload from your phone — tap the button, pick from gallery/camera, then Save Product to upload them. Use ↑ / ↓ to reorder URL images.</p>
         <textarea className="field mt-2" rows={3} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
         <div className="mt-2 flex flex-wrap gap-2">
           {form.images.split('\n').filter(Boolean).map((src, i) => (
@@ -151,7 +151,11 @@ export function ProductForm({ id }) {
             </span>
           ))}
         </div>
-        <input className="mt-3 w-full text-sm" type="file" accept="image/*" multiple onChange={onFiles} />
+        <label className="btn-outline mt-3 inline-block cursor-pointer">
+          📷 Upload product images from phone
+          <input className="hidden" type="file" accept="image/*" multiple onChange={onFiles} />
+        </label>
+        {files.length > 0 && <p className="mt-2 text-sm">{files.length} image(s) selected — will upload when you save.</p>}
         <div className="mt-2 flex flex-wrap gap-2">{previews.map((src, i) => <img key={i} src={src} alt="" className="h-20 w-20 rounded-xl object-cover" />)}</div>
       </div>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} /> Featured</label>
