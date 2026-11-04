@@ -204,21 +204,41 @@ export function MessagesPage() {
 
 export function SettingsPage() {
   const [form, setForm] = useState({});
-  useEffect(() => { get('/settings').then((r) => setForm(r.data || {})).catch(() => {}); }, []);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const load = () => { setLoading(true); setError(''); get('/settings').then((r) => setForm(r.data || {})).catch((e) => setError(e.message)).finally(() => setLoading(false)); };
+  useEffect(load, []);
+  const fields = ['storeName', 'logo', 'whatsappNumber', 'deliveryCharge', 'freeDeliveryThreshold', 'bankName', 'bankAccountTitle', 'bankAccountNumber', 'easypaisaNumber', 'jazzcashNumber', 'facebook', 'instagram', 'twitter', 'youtube', 'contactEmail', 'contactPhone', 'address'];
   const save = async (e) => {
     e.preventDefault();
-    try { const r = await put('/admin/settings', form); setForm(r.data); toast.success('Settings saved'); } catch (err) { toast.error(err.message); }
+    setSaving(true);
+    try {
+      // Send only the editable fields, with numbers as numbers — never the
+      // whole document (_id, __v, timestamps) back to the server.
+      const payload = {};
+      for (const f of fields) {
+        if (form[f] === undefined) continue;
+        payload[f] = (f === 'deliveryCharge' || f === 'freeDeliveryThreshold') ? Number(form[f]) : form[f];
+      }
+      const r = await put('/admin/settings', payload);
+      setForm(r.data || payload);
+      toast.success('Settings saved');
+    } catch (err) { toast.error(err.message); }
+    setSaving(false);
   };
-  const fields = ['storeName', 'whatsappNumber', 'deliveryCharge', 'freeDeliveryThreshold', 'bankName', 'bankAccountTitle', 'bankAccountNumber', 'easypaisaNumber', 'jazzcashNumber', 'facebook', 'instagram', 'contactEmail', 'contactPhone', 'address'];
+  if (loading) return <p>Loading settings…</p>;
+  if (error) return <div className="space-y-3"><p className="text-red-500">Settings failed to load: {error}</p><button className="btn" onClick={load}>Retry</button></div>;
   return (
     <form onSubmit={save} className="card max-w-2xl space-y-3 p-5">
       <h1 className="text-2xl font-bold">Store Settings</h1>
+      <p className="text-sm text-[var(--muted)]">These values control the checkout: delivery charge and free-delivery limit set the order total, the WhatsApp number powers the “Order via WhatsApp” button, and the bank / Easypaisa / JazzCash numbers are shown to customers who choose those payment methods. Changing them needs no code change.</p>
       {fields.map((f) => (
         <label key={f} className="block text-sm font-medium capitalize">{f.replace(/([A-Z])/g, ' $1')}
-          <input className="field mt-1" value={form[f] ?? ''} onChange={(e) => setForm({ ...form, [f]: e.target.value })} />
+          <input className="field mt-1" type={(f === 'deliveryCharge' || f === 'freeDeliveryThreshold') ? 'number' : 'text'} value={form[f] ?? ''} onChange={(e) => setForm({ ...form, [f]: e.target.value })} />
         </label>
       ))}
-      <button className="btn">Save Settings</button>
+      <button className="btn" disabled={saving}>{saving ? 'Saving…' : 'Save Settings'}</button>
     </form>
   );
 }

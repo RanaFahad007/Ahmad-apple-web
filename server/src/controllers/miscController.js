@@ -72,7 +72,22 @@ export const getSettingsPublic = asyncHandler(async (req, res) => {
 });
 
 export const updateSettings = asyncHandler(async (req, res) => {
-  const data = { ...req.body };
+  // Only whitelisted fields may be saved. The old code passed the whole
+  // document back (including _id, __v and timestamps), which Mongoose
+  // rejects on the immutable _id path — that is why Save could fail even
+  // though the form looked fine. Numbers are coerced here too, because
+  // the form sends them as strings.
+  const allowed = ['storeName', 'logo', 'whatsappNumber', 'deliveryCharge', 'freeDeliveryThreshold', 'bankName', 'bankAccountTitle', 'bankAccountNumber', 'easypaisaNumber', 'jazzcashNumber', 'facebook', 'instagram', 'twitter', 'youtube', 'contactEmail', 'contactPhone', 'address'];
+  const data = {};
+  for (const key of allowed) {
+    if (req.body[key] === undefined) continue;
+    if (key === 'deliveryCharge' || key === 'freeDeliveryThreshold') {
+      const n = Number(req.body[key]);
+      if (!Number.isNaN(n)) data[key] = n;
+    } else {
+      data[key] = req.body[key];
+    }
+  }
   if (req.body.uploadedImages?.length) data.logo = req.body.uploadedImages[0];
   const settings = await Settings.findOneAndUpdate({}, data, { new: true, upsert: true, runValidators: true });
   return sendSuccess(res, settings, 'Settings updated');
