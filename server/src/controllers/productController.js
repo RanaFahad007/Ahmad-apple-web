@@ -75,6 +75,12 @@ export const adminListProducts = asyncHandler(async (req, res) => {
   return pagedResult(res, docs, total, page, limit);
 });
 
+export const adminGetProduct = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id).populate('category', 'name');
+  if (!product) throw new AppError('Product not found', 404);
+  return sendSuccess(res, product, 'Product');
+});
+
 function productPayload(body) {
   const data = { ...body };
   if (body.name && !body.slug) data.slug = slugify(body.name);

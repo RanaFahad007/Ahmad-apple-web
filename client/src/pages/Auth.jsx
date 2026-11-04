@@ -25,7 +25,7 @@ export function Login() {
         <input className="field" type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
         <input className="field" type="password" placeholder="Password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
         <button className="btn w-full">Login</button>
-        <p className="text-center text-sm text-[#98989a]">
+        <p className="text-center text-sm text-[var(--muted)]">
           <Link to="/forgot-password" className="text-accent">Forgot password?</Link> • No account? <Link to="/register" className="text-accent">Register</Link>
         </p>
       </form>
@@ -56,7 +56,7 @@ export function Register() {
         <input className="field" placeholder="Phone (optional)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         <input className="field" type="password" placeholder="Password (min 6 characters)" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
         <button className="btn w-full">Register</button>
-        <p className="text-center text-sm text-[#98989a]">Already have an account? <Link to="/login" className="text-accent">Login</Link></p>
+        <p className="text-center text-sm text-[var(--muted)]">Already have an account? <Link to="/login" className="text-accent">Login</Link></p>
       </form>
     </div>
   );

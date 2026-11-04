@@ -2,7 +2,19 @@ import axios from 'axios';
 
 // In production on Vercel, set VITE_API_URL to the API deployment (e.g. https://apple-ahmad-website-api.vercel.app/api).
 // In local dev the Vite proxy handles /api, so no env var is needed there.
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api', withCredentials: true });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api', withCredentials: true, timeout: 30000 });
+// The auth token is also stored in zustand persist (apple-ahmad-auth).
+// Send it as a Bearer header too: the httpOnly cookie alone is a third-party
+// cookie between the website and API domains and browsers can drop it,
+// which used to leave admin pages hanging on "Checking admin access…".
+api.interceptors.request.use((config) => {
+  try {
+    const raw = localStorage.getItem('apple-ahmad-auth');
+    const token = raw ? JSON.parse(raw)?.state?.token : null;
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  } catch {}
+  return config;
+});
 api.interceptors.response.use(
   (res) => res,
   (err) => {

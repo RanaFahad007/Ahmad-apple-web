@@ -39,16 +39,16 @@ export default function Cart() {
             const variant = [i.storage, i.color, i.condition].filter(Boolean).join(', ');
             return (
               <div key={i.key} className="card flex gap-4 p-4">
-                <Link to={`/product/${i.slug}`} className="shrink-0 rounded-[16px] bg-[#2c2c2e] p-2">
+                <Link to={`/product/${i.slug}`} className="shrink-0 rounded-[16px] bg-[var(--card2)] p-2">
                   <img src={i.image} onError={imgFallback} alt={i.name} className="h-24 w-24 rounded-[12px] object-cover" />
                 </Link>
                 <div className="flex-1 min-w-0">
                   <Link to={`/product/${i.slug}`} className="font-semibold hover:text-[#007aff]">{i.name}</Link>
-                  {variant && <p className="text-sm text-[#98989a]">{variant}</p>}
+                  {variant && <p className="text-sm text-[var(--muted)]">{variant}</p>}
                   <div className="mt-2 flex items-center gap-3">
-                    <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-lg" onClick={() => updateQty(i.key, i.quantity - 1)} aria-label="Decrease quantity">−</button>
+                    <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--card2)] text-lg" onClick={() => updateQty(i.key, i.quantity - 1)} aria-label="Decrease quantity">−</button>
                     <span className="w-6 text-center font-bold">{i.quantity}</span>
-                    <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-lg" onClick={() => updateQty(i.key, i.quantity + 1)} aria-label="Increase quantity">+</button>
+                    <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--card2)] text-lg" onClick={() => updateQty(i.key, i.quantity + 1)} aria-label="Increase quantity">+</button>
                     <button className="ml-2 text-sm text-red-500" onClick={() => remove(i.key)}>Remove</button>
                   </div>
                 </div>
@@ -59,14 +59,14 @@ export default function Cart() {
         </div>
         <aside className="space-y-3">
           <div className="card flex gap-2 p-3">
-            <input className="field !border-0 !bg-[#2c2c2e]" placeholder="Coupon code" value={coupon} onChange={(e) => setCoupon(e.target.value)} />
+            <input className="field !border-0 !bg-[var(--card2)]" placeholder="Coupon code" value={coupon} onChange={(e) => setCoupon(e.target.value)} />
             <button type="button" className="btn !px-5 shrink-0" onClick={applyCoupon}>Apply</button>
           </div>
           <div className="card p-5">
-            <div className="flex justify-between text-sm text-[#98989a]"><span>Subtotal</span><span className="text-white">{formatPKR(subtotal)}</span></div>
-            {discount > 0 && <div className="mt-2 flex justify-between text-sm text-[#98989a]"><span>Discount</span><span className="text-green-500">− {formatPKR(discount)}</span></div>}
-            <div className="mt-2 flex justify-between text-sm text-[#98989a]"><span>Delivery</span><span className="text-white">{delivery === 0 ? 'FREE' : formatPKR(delivery)}</span></div>
-            <div className="mt-3 flex justify-between border-t border-[#2c2c2e] pt-3 font-bold"><span>Total</span><span>{formatPKR(grandTotal)}</span></div>
+            <div className="flex justify-between text-sm text-[var(--muted)]"><span>Subtotal</span><span className="text-[var(--text)]">{formatPKR(subtotal)}</span></div>
+            {discount > 0 && <div className="mt-2 flex justify-between text-sm text-[var(--muted)]"><span>Discount</span><span className="text-green-500">− {formatPKR(discount)}</span></div>}
+            <div className="mt-2 flex justify-between text-sm text-[var(--muted)]"><span>Delivery</span><span className="text-[var(--text)]">{delivery === 0 ? 'FREE' : formatPKR(delivery)}</span></div>
+            <div className="mt-3 flex justify-between border-t border-[var(--border)] pt-3 font-bold"><span>Total</span><span>{formatPKR(grandTotal)}</span></div>
           </div>
           <Link to="/checkout" className="btn w-full !py-4 !text-base">Checkout</Link>
           <Link to="/shop" className="btn-outline w-full">Continue Shopping</Link>

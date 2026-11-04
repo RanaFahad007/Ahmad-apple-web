@@ -87,7 +87,7 @@ export default function Shop() {
     <div className="py-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-extrabold capitalize">{categoryName}</h1>
-        <button className="rounded-full bg-[#1c1c1e] px-3 py-2 text-lg" aria-label="Search" onClick={() => setShowSearch(!showSearch)}>🔍</button>
+        <button className="rounded-full bg-[var(--card)] px-3 py-2 text-lg" aria-label="Search" onClick={() => setShowSearch(!showSearch)}>🔍</button>
       </div>
       {showSearch && (
         <form
@@ -143,8 +143,8 @@ export default function Shop() {
         </div>
       </div>
       {drawer && (
-        <div className="fixed inset-0 z-50 bg-black/40 lg:hidden" onClick={() => setDrawer(false)}>
-          <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-3xl bg-[#1c1c1e] p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-[var(--bg)]/40 lg:hidden" onClick={() => setDrawer(false)}>
+          <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-3xl bg-[var(--card)] p-5" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex justify-between"><p className="font-bold">Filters</p><button onClick={() => setDrawer(false)}>✕</button></div>
             <Filters value={filters} onChange={(p) => { update(p); }} categories={categories} />
             <button className="btn mt-5 w-full" onClick={() => setDrawer(false)}>Show results</button>

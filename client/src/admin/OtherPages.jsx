@@ -68,7 +68,9 @@ export function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [status, setStatus] = useState('');
   const [selected, setSelected] = useState(null);
-  const load = () => get('/admin/orders', status ? { status } : {}).then((r) => setOrders(r.data || [])).catch(() => {});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const load = () => { setLoading(true); setError(''); get('/admin/orders', status ? { status } : {}).then((r) => setOrders(r.data || [])).catch((e) => setError(e.message)).finally(() => setLoading(false)); };
   useEffect(load, [status]);
   return (
     <div className="space-y-4">
@@ -77,6 +79,8 @@ export function OrdersPage() {
         <option value="">All statuses</option>
         {['Pending', 'Confirmed', 'Packed', 'Shipped', 'Delivered', 'Cancelled', 'Returned'].map((s) => <option key={s}>{s}</option>)}
       </select>
+      {loading && <p>Loading orders…</p>}
+      {error && <p className="text-red-500">Failed to load orders: {error} <button className="btn-outline !py-1" onClick={load}>Retry</button></p>}
       <div className="space-y-3">
         {orders.map((o) => (
           <div key={o._id} className="card p-4">
@@ -84,7 +88,7 @@ export function OrdersPage() {
               <p className="font-bold">{o.orderNumber} — {o.customerName}</p>
               <p className="text-sm">{formatPKR(o.total)} • {o.paymentMethod} ({o.paymentStatus})</p>
             </div>
-            <p className="text-sm text-[#98989a]">{o.shippingAddress?.city} • {o.shippingAddress?.phone}</p>
+            <p className="text-sm text-[var(--muted)]">{o.shippingAddress?.city} • {o.shippingAddress?.phone}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <select className="field !w-auto !py-2" value={o.status} onChange={async (e) => { await put(`/admin/orders/${o._id}`, { status: e.target.value }); load(); }}>
                 {['Pending', 'Confirmed', 'Packed', 'Shipped', 'Delivered', 'Cancelled', 'Returned'].map((s) => <option key={s}>{s}</option>)}
@@ -131,7 +135,7 @@ export function CustomersPage() {
       {detail && (
         <div className="card p-5">
           <h2 className="font-bold">Customer detail — {detail.user.name}</h2>
-          <p className="text-sm text-[#98989a]">{detail.user.email} • {detail.user.phone}</p>
+          <p className="text-sm text-[var(--muted)]">{detail.user.email} • {detail.user.phone}</p>
           <p className="mt-2 font-semibold">Order history ({detail.orders.length})</p>
           <ul className="mt-1 list-disc pl-5 text-sm">{detail.orders.map((o) => <li key={o._id}>{o.orderNumber} — {o.status} — {formatPKR(o.total)}</li>)}</ul>
         </div>

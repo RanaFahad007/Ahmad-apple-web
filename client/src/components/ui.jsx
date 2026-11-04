@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatPKR, imgFallback } from '../lib/api.js';
+import { ACCENTS, applyTheme, getAccent, getTheme } from '../lib/theme.js';
 import { useWishlistStore } from '../store/useStore.js';
 
 export function Stars({ value = 0 }) {
@@ -30,7 +31,7 @@ export function ProductCard({ product }) {
   const price = product.salePrice > 0 ? product.salePrice : product.price;
   return (
     <article className="card group overflow-hidden transition hover:shadow-lg">
-      <Link to={`/product/${product.slug}`} className="block bg-[#2c2c2e] p-3">
+      <Link to={`/product/${product.slug}`} className="block bg-[var(--card2)] p-3">
         <img
           src={product.images?.[0] || ''}
           onError={imgFallback}
@@ -47,14 +48,14 @@ export function ProductCard({ product }) {
           <button
             onClick={() => toggle(product._id)}
             aria-label="Toggle wishlist"
-            className={`shrink-0 rounded-full px-2.5 py-1 text-sm ${wished ? 'text-red-500' : 'text-white'}`}
+            className={`shrink-0 rounded-full px-2.5 py-1 text-sm ${wished ? 'text-red-500' : 'text-[var(--text)]'}`}
           >
             {wished ? '♥' : '♡'}
           </button>
         </div>
         <div className="mt-1 flex items-baseline gap-2">
           <span className="font-bold">{formatPKR(price)}</span>
-          {product.salePrice > 0 && <span className="text-sm text-[#98989a] line-through">{formatPKR(product.price)}</span>}
+          {product.salePrice > 0 && <span className="text-sm text-[var(--muted)] line-through">{formatPKR(product.price)}</span>}
         </div>
         <p className={`mt-1 text-xs font-medium ${product.stock > 0 ? 'text-green-500' : 'text-red-500'}`}>
           {product.stock > 0 ? 'In stock' : 'Out of stock'}
@@ -82,13 +83,40 @@ export class ErrorBoundary extends React.Component {
 }
 
 export function useDarkMode() {
-  // The storefront is dark-only now (black background, dark cards, blue accent).
-  // Keep the hook for the existing toggle button, but default to dark and
-  // never leave the document without the dark class.
-  const [dark, setDark] = useState(() => localStorage.getItem('aa-theme') !== 'light');
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', true);
-    localStorage.setItem('aa-theme', 'dark');
-  }, [dark]);
-  return [dark, () => setDark(true)];
+  // Real dark/light toggle, shared by the storefront and the admin panel
+  // through localStorage (see src/lib/theme.js).
+  const [theme, setThemeState] = useState(getTheme);
+  const [accent, setAccentState] = useState(getAccent);
+  useEffect(() => { applyTheme(theme, accent); }, [theme, accent]);
+  const toggleDark = () => setThemeState((t) => (t === 'dark' ? 'light' : 'dark'));
+  const setAccent = (v) => setAccentState(v);
+  return [theme === 'dark', toggleDark, theme, accent, setAccent];
+}
+
+// Backwards-compatible alias used by Layout/AdminLayout.
+export const useTheme = useDarkMode;
+
+export function ThemeControls({ compact = false }) {
+  const [dark, toggleDark, theme, accent, setAccent] = useDarkMode();
+  return (
+    <div className="flex items-center gap-2">
+      <button onClick={toggleDark} className="rounded-full border border-[var(--border)] px-3 py-2" aria-label="Toggle dark / light mode" title={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
+        {dark ? '☀️' : '🌙'}
+      </button>
+      {!compact && (
+        <span className="flex items-center gap-1" title="Accent colour">
+          {ACCENTS.map((a) => (
+            <button
+              key={a.value}
+              onClick={() => setAccent(a.value)}
+              aria-label={`${a.name} accent`}
+              title={a.name}
+              className={`h-6 w-6 rounded-full ${accent === a.value ? 'ring-2 ring-offset-2 ring-[var(--accent)]' : ''}`}
+              style={{ background: a.value }}
+            />
+          ))}
+        </span>
+      )}
+    </div>
+  );
 }

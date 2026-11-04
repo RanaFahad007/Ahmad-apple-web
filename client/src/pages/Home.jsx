@@ -40,18 +40,18 @@ export default function Home() {
   return (
     <div className="space-y-8 py-6">
       {/* Hero — dark card, like the mockup: "New / iPhone 16 Pro / Titanium. Pro." */}
-      <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-[24px] bg-[#1c1c1e]">
+      <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-[24px] bg-[var(--card)]">
         <div className="grid items-center gap-6 p-6 sm:p-8 lg:grid-cols-2">
           <div>
-            <p className="text-sm text-[#98989a]">New</p>
+            <p className="text-sm text-[var(--muted)]">New</p>
             <h1 className="mt-1 text-4xl font-extrabold leading-tight sm:text-5xl">{hero?.title || 'iPhone 16 Pro'}</h1>
-            <p className="mt-2 text-[#98989a]">{hero?.subtitle || 'Titanium. Pro.'}</p>
+            <p className="mt-2 text-[var(--muted)]">{hero?.subtitle || 'Titanium. Pro.'}</p>
             <div className="mt-6">
               <Link to={hero?.ctaLink || '/category/iphone'} className="inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-bold text-black">{hero?.ctaText || 'Shop now'}</Link>
             </div>
           </div>
           {heroImage && (
-            <div className="rounded-[20px] bg-[#2c2c2e] p-4">
+            <div className="rounded-[20px] bg-[var(--card2)] p-4">
               <img src={heroImage} onError={imgFallback} alt={hero?.title || 'Featured product'} className="aspect-[4/3] w-full rounded-[16px] object-cover" />
             </div>
           )}
@@ -96,7 +96,7 @@ export default function Home() {
         ].map(([title, text]) => (
           <div key={title} className="card p-5">
             <p className="font-bold">{title}</p>
-            <p className="mt-1 text-sm text-[#98989a]">{text}</p>
+            <p className="mt-1 text-sm text-[var(--muted)]">{text}</p>
           </div>
         ))}
       </section>

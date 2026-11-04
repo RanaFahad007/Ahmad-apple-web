@@ -3,7 +3,7 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
-      colors: { apple: '#1c1c1e', accent: '#007aff', ink: '#000000', card: '#1c1c1e', card2: '#2c2c2e', muted: '#98989a' },
+      colors: { apple: 'var(--card)', accent: 'var(--accent)', ink: 'var(--text)', card: 'var(--card)', card2: 'var(--card2)', muted: 'var(--muted)' },
       fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'] },
     },
   },

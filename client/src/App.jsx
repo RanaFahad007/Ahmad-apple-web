@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from 'react';
-import { BrowserRouter, Route, Routes, useParams } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/Layout.jsx';
 import { ErrorBoundary } from './components/ui.jsx';
@@ -38,6 +38,14 @@ const SettingsPage = lazy(() => import('./admin/OtherPages.jsx').then((m) => ({ 
 
 function Loading() { return <p className="p-10 text-center">Loading…</p>; }
 
+// Every route change starts at the top, so a page you go back to is never
+// left sitting at a blank-looking scroll position from the previous page.
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 function ProductFormWrapper() {
   const { id } = useParams();
   return <ProductForm id={id} />;
@@ -47,6 +55,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <ScrollToTop />
         <Toaster position="top-center" />
         <Suspense fallback={<Loading />}>
           <Routes>

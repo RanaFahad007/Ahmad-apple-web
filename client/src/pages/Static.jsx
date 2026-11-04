@@ -62,5 +62,5 @@ export function Contact() {
 
 export function NotFound() {
   usePageTitle('Page Not Found');
-  return <div className="py-20 text-center"><h1 className="text-4xl font-extrabold">404</h1><p className="mt-2 text-[#98989a]">This page does not exist.</p><a href="/" className="btn mt-5 inline-flex">Go home</a></div>;
+  return <div className="py-20 text-center"><h1 className="text-4xl font-extrabold">404</h1><p className="mt-2 text-[var(--muted)]">This page does not exist.</p><a href="/" className="btn mt-5 inline-flex">Go home</a></div>;
 }

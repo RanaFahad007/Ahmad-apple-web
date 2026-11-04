@@ -93,10 +93,10 @@ export default function Checkout() {
         </div>
 
         {paymentMethod === 'Bank Transfer' && (
-          <div className="rounded-2xl bg-[#1c1c1e] p-4 text-sm ">
+          <div className="rounded-2xl bg-[var(--card)] p-4 text-sm ">
             <p className="font-semibold">Bank transfer details</p>
             <p>Bank: {settings.bankName || '—'} • Title: {settings.bankAccountTitle || '—'} • Account: {settings.bankAccountNumber || '—'}</p>
-            <p className="mt-1 text-[#98989a]">After transfer, paste the screenshot link below or send it on WhatsApp.</p>
+            <p className="mt-1 text-[var(--muted)]">After transfer, paste the screenshot link below or send it on WhatsApp.</p>
           </div>
         )}
         {paymentMethod === 'Easypaisa' && <p className="text-sm">Easypaisa number: <b>{settings.easypaisaNumber || '—'}</b></p>}
@@ -121,7 +121,7 @@ export default function Checkout() {
           <input className="field" placeholder="Coupon code" value={coupon} onChange={(e) => setCoupon(e.target.value)} />
           <button type="button" className="btn-outline !px-4" onClick={applyCoupon}>Apply</button>
         </div>
-        <p className="mt-2 text-xs text-[#98989a]">Try WELCOME10 for 10% off.</p>
+        <p className="mt-2 text-xs text-[var(--muted)]">Try WELCOME10 for 10% off.</p>
       </aside>
     </div>
   );

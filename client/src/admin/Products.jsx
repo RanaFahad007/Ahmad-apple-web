@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { get, post, put, del, formatPKR } from '../lib/api.js';
 
@@ -7,8 +7,12 @@ export function ProductList() {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState([]);
-  const load = () => get('/admin/products', { search, limit: 50 }).then((r) => setProducts(r.data || [])).catch(() => {});
-  useEffect(() => { load(); }, [search]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const load = () => { setLoading(true); setError(''); get('/admin/products', { search, limit: 50 }).then((r) => setProducts(r.data || [])).catch((e) => setError(e.message)).finally(() => setLoading(false)); };
+  // Debounce typing: the old code fired one API call per keystroke, and each
+  // cold serverless call is slow, so typing felt frozen.
+  useEffect(() => { const t = setTimeout(load, 300); return () => clearTimeout(t); }, [search]);
   const toggle = (id) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   return (
     <div className="space-y-4">
@@ -22,14 +26,16 @@ export function ProductList() {
           <button className="btn-outline !text-red-600" onClick={async () => { await post('/admin/products/bulk-delete', { ids: selected }); setSelected([]); load(); toast.success('Deleted'); }}>Delete selected ({selected.length})</button>
         )}
       </div>
+      {loading && <p>Loading products…</p>}
+      {error && <p className="text-red-500">Failed to load products: {error} <button className="btn-outline !py-1" onClick={load}>Retry</button></p>}
       <div className="hidden overflow-x-auto rounded-3xl border md:block">
         <table className="w-full text-sm">
-          <thead><tr className="bg-[#1c1c1e] text-left "><th className="p-3"></th><th className="p-3">Product</th><th className="p-3">Price</th><th className="p-3">Stock</th><th className="p-3">Active</th><th className="p-3">Actions</th></tr></thead>
+          <thead><tr className="bg-[var(--card)] text-left "><th className="p-3"></th><th className="p-3">Product</th><th className="p-3">Price</th><th className="p-3">Stock</th><th className="p-3">Active</th><th className="p-3">Actions</th></tr></thead>
           <tbody>
             {products.map((p) => (
               <tr key={p._id} className="border-t">
                 <td className="p-3"><input type="checkbox" checked={selected.includes(p._id)} onChange={() => toggle(p._id)} /></td>
-                <td className="p-3 font-semibold">{p.name}<p className="text-xs font-normal text-[#98989a]">{p.category?.name || ''}</p></td>
+                <td className="p-3 font-semibold">{p.name}<p className="text-xs font-normal text-[var(--muted)]">{p.category?.name || ''}</p></td>
                 <td className="p-3">{formatPKR(p.salePrice > 0 ? p.salePrice : p.price)}</td>
                 <td className="p-3">{p.stock}</td>
                 <td className="p-3">{p.isActive ? 'Yes' : 'No'}</td>
@@ -47,7 +53,7 @@ export function ProductList() {
         {products.map((p) => (
           <div key={p._id} className="card p-4">
             <p className="font-bold">{p.name}</p>
-            <p className="text-sm text-[#98989a]">{formatPKR(p.salePrice > 0 ? p.salePrice : p.price)} • Stock {p.stock} • {p.isActive ? 'Active' : 'Hidden'}</p>
+            <p className="text-sm text-[var(--muted)]">{formatPKR(p.salePrice > 0 ? p.salePrice : p.price)} • Stock {p.stock} • {p.isActive ? 'Active' : 'Hidden'}</p>
             <div className="mt-2 space-x-3 text-sm">
               <Link to={`/admin-ahmad/products/${p._id}`} className="text-accent">Edit</Link>
               <button className="text-accent" onClick={async () => { await post(`/admin/products/${p._id}/duplicate`, {}); load(); }}>Duplicate</button>
@@ -64,16 +70,18 @@ const EMPTY_FORM = { name: '', slug: '', brandName: 'Apple', category: '', price
 
 export function ProductForm({ id }) {
   const [form, setForm] = useState(EMPTY_FORM);
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
   useEffect(() => { get('/categories').then((r) => setCategories(r.data || [])).catch(() => {}); }, []);
   useEffect(() => {
     if (!id || id === 'new') return;
-    get('/admin/products', { limit: 100 }).then((r) => {
-      const p = (r.data || []).find((x) => x._id === id);
+    // Single-product fetch (new server route) instead of downloading 100 products to find one.
+    get(`/admin/products/${id}`).then((r) => {
+      const p = r.data;
       if (p) setForm({ ...EMPTY_FORM, ...p, category: p.category?._id || p.category || '', images: (p.images || []).join('\n'), price: String(p.price), salePrice: String(p.salePrice || ''), stock: String(p.stock) });
-    });
+    }).catch((e) => toast.error(e.message));
   }, [id]);
 
   const onFiles = (e) => {
@@ -110,7 +118,7 @@ export function ProductForm({ id }) {
       if (id && id !== 'new') await put(`/admin/products/${id}`, payload);
       else await post('/admin/products', payload);
       toast.success('Product saved');
-      window.location.href = '/admin-ahmad/products';
+      navigate('/admin-ahmad/products');
     } catch (err) { toast.error(err.message); }
   };
 
@@ -132,11 +140,11 @@ export function ProductForm({ id }) {
       <textarea className="field" rows={4} placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
       <div>
         <p className="font-semibold">Images</p>
-        <p className="text-xs text-[#98989a]">Paste image URLs (one per line), and/or upload new images below. Use ↑ / ↓ to reorder URL images.</p>
+        <p className="text-xs text-[var(--muted)]">Paste image URLs (one per line), and/or upload new images below. Use ↑ / ↓ to reorder URL images.</p>
         <textarea className="field mt-2" rows={3} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
         <div className="mt-2 flex flex-wrap gap-2">
           {form.images.split('\n').filter(Boolean).map((src, i) => (
-            <span key={i} className="flex items-center gap-1 rounded-full bg-[#1c1c1e] px-2 py-1 text-xs ">
+            <span key={i} className="flex items-center gap-1 rounded-full bg-[var(--card)] px-2 py-1 text-xs ">
               {i + 1}. {src.slice(0, 30)}…
               <button type="button" onClick={() => moveImage(i, -1)}>↑</button>
               <button type="button" onClick={() => moveImage(i, 1)}>↓</button>

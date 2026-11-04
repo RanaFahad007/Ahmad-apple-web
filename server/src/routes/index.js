@@ -61,6 +61,7 @@ router.post('/upload', protect, adminOnly, upload.array('images', 8), uploadToCl
 router.use('/admin', protect, adminOnly);
 router.get('/admin/dashboard', misc.adminDashboard);
 router.get('/admin/products', products.adminListProducts);
+router.get('/admin/products/:id', products.adminGetProduct);
 router.post('/admin/products', upload.array('images', 8), uploadToCloudinary, products.createProduct);
 router.put('/admin/products/:id', upload.array('images', 8), uploadToCloudinary, products.updateProduct);
 router.delete('/admin/products/:id', products.deleteProduct);
