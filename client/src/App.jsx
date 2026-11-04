@@ -51,10 +51,19 @@ function ProductFormWrapper() {
   return <ProductForm id={id} />;
 }
 
+// The error boundary must live INSIDE the router (its fallback renders a
+// <Link>), and it must reset on navigation — otherwise one crashed page
+// left every later page blank, because the boundary stayed in its error
+// state even after going back home.
+function RouteErrorBoundary({ children }) {
+  const { pathname } = useLocation();
+  return <ErrorBoundary key={pathname}>{children}</ErrorBoundary>;
+}
+
 export default function App() {
   return (
-    <ErrorBoundary>
-      <BrowserRouter>
+    <BrowserRouter>
+      <RouteErrorBoundary>
         <ScrollToTop />
         <Toaster position="top-center" />
         <Suspense fallback={<Loading />}>
@@ -99,7 +108,7 @@ export default function App() {
             </Route>
           </Routes>
         </Suspense>
-      </BrowserRouter>
-    </ErrorBoundary>
+      </RouteErrorBoundary>
+    </BrowserRouter>
   );
 }

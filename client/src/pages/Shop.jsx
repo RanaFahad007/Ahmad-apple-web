@@ -50,10 +50,13 @@ export default function Shop() {
   const [loading, setLoading] = useState(true);
   const [drawer, setDrawer] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  // query must be defined before it is read: the old order initialised
+  // searchInput from query before query existed, which threw
+  // "Cannot access 'query' before initialization" on every Shop render.
+  const query = Object.fromEntries(searchParams.entries());
   const [searchInput, setSearchInput] = useState(query.search || '');
   usePageTitle(slug ? slug : 'Shop');
 
-  const query = Object.fromEntries(searchParams.entries());
   const filters = { ...query, ...(slug ? { categorySlug: slug } : {}) };
 
   useEffect(() => { get('/categories').then((r) => setCategories(r.data || [])).catch(() => {}); }, []);
