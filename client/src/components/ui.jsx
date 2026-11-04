@@ -30,13 +30,13 @@ export function ProductCard({ product }) {
   const price = product.salePrice > 0 ? product.salePrice : product.price;
   return (
     <article className="card group overflow-hidden transition hover:shadow-lg">
-      <Link to={`/product/${product.slug}`} className="block bg-apple">
+      <Link to={`/product/${product.slug}`} className="block bg-[#2c2c2e] p-3">
         <img
           src={product.images?.[0] || ''}
           onError={imgFallback}
           alt={product.name}
           loading="lazy"
-          className="aspect-square w-full object-cover transition duration-300 group-hover:scale-105"
+          className="aspect-square w-full rounded-[16px] object-cover transition duration-300 group-hover:scale-105"
         />
       </Link>
       <div className="p-4">
@@ -47,20 +47,17 @@ export function ProductCard({ product }) {
           <button
             onClick={() => toggle(product._id)}
             aria-label="Toggle wishlist"
-            className={`shrink-0 rounded-full border px-2.5 py-1 text-sm ${wished ? 'border-red-200 bg-red-50 text-red-600' : ''}`}
+            className={`shrink-0 rounded-full px-2.5 py-1 text-sm ${wished ? 'text-red-500' : 'text-white'}`}
           >
             {wished ? '♥' : '♡'}
           </button>
         </div>
-        <div className="mt-1 text-sm text-neutral-500">
-          <Stars value={product.rating} /> <span>({product.numReviews || 0})</span>
+        <div className="mt-1 flex items-baseline gap-2">
+          <span className="font-bold">{formatPKR(price)}</span>
+          {product.salePrice > 0 && <span className="text-sm text-[#98989a] line-through">{formatPKR(product.price)}</span>}
         </div>
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-lg font-bold">{formatPKR(price)}</span>
-          {product.salePrice > 0 && <span className="text-sm text-neutral-400 line-through">{formatPKR(product.price)}</span>}
-        </div>
-        <p className={`mt-1 text-xs font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {product.stock > 0 ? `In stock (${product.stock})` : 'Out of stock'}
+        <p className={`mt-1 text-xs font-medium ${product.stock > 0 ? 'text-green-500' : 'text-red-500'}`}>
+          {product.stock > 0 ? 'In stock' : 'Out of stock'}
         </p>
       </div>
     </article>
@@ -85,10 +82,13 @@ export class ErrorBoundary extends React.Component {
 }
 
 export function useDarkMode() {
-  const [dark, setDark] = useState(() => localStorage.getItem('aa-theme') === 'dark');
+  // The storefront is dark-only now (black background, dark cards, blue accent).
+  // Keep the hook for the existing toggle button, but default to dark and
+  // never leave the document without the dark class.
+  const [dark, setDark] = useState(() => localStorage.getItem('aa-theme') !== 'light');
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark);
-    localStorage.setItem('aa-theme', dark ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', true);
+    localStorage.setItem('aa-theme', 'dark');
   }, [dark]);
-  return [dark, () => setDark((d) => !d)];
+  return [dark, () => setDark(true)];
 }

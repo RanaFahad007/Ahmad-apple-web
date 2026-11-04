@@ -1,43 +1,77 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useCartStore } from '../store/useStore.js';
-import { formatPKR, imgFallback, usePageTitle } from '../lib/api.js';
+import { get, post, formatPKR, imgFallback, usePageTitle } from '../lib/api.js';
 import { Empty } from '../components/ui.jsx';
 
 export default function Cart() {
   const { items, updateQty, remove, total } = useCartStore();
-  usePageTitle('Cart');
-  if (!items.length) return <div className="py-10"><Empty title="Your cart is empty" text="Add an iPhone, MacBook or accessory to get started." /></div>;
+  const [coupon, setCoupon] = useState(() => sessionStorage.getItem('aa-coupon') || '');
+  const [discount, setDiscount] = useState(0);
+  const [settings, setSettings] = useState({});
+  usePageTitle('Bag');
+
+  useEffect(() => { get('/settings').then((r) => setSettings(r.data || {})).catch(() => {}); }, []);
+
+  const subtotal = total();
+  const delivery = items.length === 0 ? 0 : (subtotal - discount >= (settings.freeDeliveryThreshold || 50000) ? 0 : (settings.deliveryCharge ?? 300));
+  const grandTotal = subtotal - discount + delivery;
+
+  const applyCoupon = async () => {
+    if (!coupon.trim()) return;
+    try {
+      const res = await post('/coupons/validate', { code: coupon });
+      const c = res.data;
+      setDiscount(c.type === 'percent' ? Math.round((subtotal * c.value) / 100) : c.value);
+      sessionStorage.setItem('aa-coupon', coupon);
+      toast.success(`Coupon ${c.code} applied`);
+    } catch (err) { toast.error(err.message); }
+  };
+
+  if (!items.length) return <div className="py-10"><Empty title="Your bag is empty" text="Add an iPhone, MacBook or accessory to get started." /></div>;
   return (
-    <div className="grid gap-6 py-6 lg:grid-cols-[1fr_360px]">
-      <div className="space-y-3">
-        {items.map((i) => (
-          <div key={i.key} className="card flex gap-4 p-4">
-            <Link to={`/product/${i.slug}`}><img src={i.image} onError={imgFallback} alt={i.name} className="h-24 w-24 rounded-2xl object-cover" /></Link>
-            <div className="flex-1">
-              <Link to={`/product/${i.slug}`} className="font-semibold hover:text-accent">{i.name}</Link>
-              <p className="text-sm text-neutral-500">{i.color} {i.storage} • {i.condition}</p>
-              <p className="mt-1 font-bold">{formatPKR(i.price)}</p>
-              <div className="mt-2 flex items-center gap-3">
-                <div className="flex items-center rounded-full border">
-                  <button className="px-3 py-1" onClick={() => updateQty(i.key, i.quantity - 1)}>−</button>
-                  <span className="w-8 text-center">{i.quantity}</span>
-                  <button className="px-3 py-1" onClick={() => updateQty(i.key, i.quantity + 1)}>+</button>
+    <div className="py-6">
+      <h1 className="text-3xl font-extrabold">Bag</h1>
+      <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_360px]">
+        <div className="space-y-3">
+          {items.map((i) => {
+            const variant = [i.storage, i.color, i.condition].filter(Boolean).join(', ');
+            return (
+              <div key={i.key} className="card flex gap-4 p-4">
+                <Link to={`/product/${i.slug}`} className="shrink-0 rounded-[16px] bg-[#2c2c2e] p-2">
+                  <img src={i.image} onError={imgFallback} alt={i.name} className="h-24 w-24 rounded-[12px] object-cover" />
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <Link to={`/product/${i.slug}`} className="font-semibold hover:text-[#007aff]">{i.name}</Link>
+                  {variant && <p className="text-sm text-[#98989a]">{variant}</p>}
+                  <div className="mt-2 flex items-center gap-3">
+                    <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-lg" onClick={() => updateQty(i.key, i.quantity - 1)} aria-label="Decrease quantity">−</button>
+                    <span className="w-6 text-center font-bold">{i.quantity}</span>
+                    <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2c2c2e] text-lg" onClick={() => updateQty(i.key, i.quantity + 1)} aria-label="Increase quantity">+</button>
+                    <button className="ml-2 text-sm text-red-500" onClick={() => remove(i.key)}>Remove</button>
+                  </div>
                 </div>
-                <button className="text-sm text-red-600" onClick={() => remove(i.key)}>Remove</button>
+                <p className="shrink-0 font-bold">{formatPKR(i.price * i.quantity)}</p>
               </div>
-            </div>
-            <p className="font-bold">{formatPKR(i.price * i.quantity)}</p>
+            );
+          })}
+        </div>
+        <aside className="space-y-3">
+          <div className="card flex gap-2 p-3">
+            <input className="field !border-0 !bg-[#2c2c2e]" placeholder="Coupon code" value={coupon} onChange={(e) => setCoupon(e.target.value)} />
+            <button type="button" className="btn !px-5 shrink-0" onClick={applyCoupon}>Apply</button>
           </div>
-        ))}
+          <div className="card p-5">
+            <div className="flex justify-between text-sm text-[#98989a]"><span>Subtotal</span><span className="text-white">{formatPKR(subtotal)}</span></div>
+            {discount > 0 && <div className="mt-2 flex justify-between text-sm text-[#98989a]"><span>Discount</span><span className="text-green-500">− {formatPKR(discount)}</span></div>}
+            <div className="mt-2 flex justify-between text-sm text-[#98989a]"><span>Delivery</span><span className="text-white">{delivery === 0 ? 'FREE' : formatPKR(delivery)}</span></div>
+            <div className="mt-3 flex justify-between border-t border-[#2c2c2e] pt-3 font-bold"><span>Total</span><span>{formatPKR(grandTotal)}</span></div>
+          </div>
+          <Link to="/checkout" className="btn w-full !py-4 !text-base">Checkout</Link>
+          <Link to="/shop" className="btn-outline w-full">Continue Shopping</Link>
+        </aside>
       </div>
-      <aside className="card h-fit p-5">
-        <h2 className="text-lg font-bold">Order Summary</h2>
-        <div className="mt-3 flex justify-between text-sm"><span>Subtotal</span><span>{formatPKR(total())}</span></div>
-        <p className="mt-2 text-xs text-neutral-400">Delivery charges are calculated at checkout. Free delivery over Rs 50,000.</p>
-        <Link to="/checkout" className="btn mt-5 w-full">Proceed to Checkout</Link>
-        <Link to="/shop" className="btn-outline mt-2 w-full">Continue Shopping</Link>
-      </aside>
     </div>
   );
 }

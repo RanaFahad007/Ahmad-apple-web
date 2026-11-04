@@ -84,7 +84,7 @@ export function OrdersPage() {
               <p className="font-bold">{o.orderNumber} — {o.customerName}</p>
               <p className="text-sm">{formatPKR(o.total)} • {o.paymentMethod} ({o.paymentStatus})</p>
             </div>
-            <p className="text-sm text-neutral-500">{o.shippingAddress?.city} • {o.shippingAddress?.phone}</p>
+            <p className="text-sm text-[#98989a]">{o.shippingAddress?.city} • {o.shippingAddress?.phone}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <select className="field !w-auto !py-2" value={o.status} onChange={async (e) => { await put(`/admin/orders/${o._id}`, { status: e.target.value }); load(); }}>
                 {['Pending', 'Confirmed', 'Packed', 'Shipped', 'Delivered', 'Cancelled', 'Returned'].map((s) => <option key={s}>{s}</option>)}
@@ -131,7 +131,7 @@ export function CustomersPage() {
       {detail && (
         <div className="card p-5">
           <h2 className="font-bold">Customer detail — {detail.user.name}</h2>
-          <p className="text-sm text-neutral-500">{detail.user.email} • {detail.user.phone}</p>
+          <p className="text-sm text-[#98989a]">{detail.user.email} • {detail.user.phone}</p>
           <p className="mt-2 font-semibold">Order history ({detail.orders.length})</p>
           <ul className="mt-1 list-disc pl-5 text-sm">{detail.orders.map((o) => <li key={o._id}>{o.orderNumber} — {o.status} — {formatPKR(o.total)}</li>)}</ul>
         </div>

@@ -12,8 +12,9 @@ export default function Checkout() {
   const [form, setForm] = useState({ fullName: user?.name || '', phone: user?.phone || '', city: '', address: '' });
   const [paymentMethod, setPaymentMethod] = useState('COD');
   const [screenshot, setScreenshot] = useState('');
-  const [coupon, setCoupon] = useState('');
+  const [coupon, setCoupon] = useState(() => sessionStorage.getItem('aa-coupon') || '');
   const [discount, setDiscount] = useState(0);
+  const [couponAutoApplied, setCouponAutoApplied] = useState(false);
   usePageTitle('Checkout');
 
   useEffect(() => {
@@ -32,9 +33,21 @@ export default function Checkout() {
       const res = await post('/coupons/validate', { code: coupon });
       const c = res.data;
       setDiscount(c.type === 'percent' ? Math.round((subtotal * c.value) / 100) : c.value);
+      sessionStorage.setItem('aa-coupon', coupon);
       toast.success(`Coupon ${c.code} applied`);
     } catch (err) { toast.error(err.message); }
   };
+
+  // A coupon applied in the Bag carries over to checkout once.
+  useEffect(() => {
+    if (coupon && !couponAutoApplied && items.length) {
+      setCouponAutoApplied(true);
+      post('/coupons/validate', { code: coupon })
+        .then((res) => { const c = res.data; setDiscount(c.type === 'percent' ? Math.round((total() * c.value) / 100) : c.value); })
+        .catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -80,10 +93,10 @@ export default function Checkout() {
         </div>
 
         {paymentMethod === 'Bank Transfer' && (
-          <div className="rounded-2xl bg-apple p-4 text-sm dark:bg-neutral-800">
+          <div className="rounded-2xl bg-[#1c1c1e] p-4 text-sm ">
             <p className="font-semibold">Bank transfer details</p>
             <p>Bank: {settings.bankName || '—'} • Title: {settings.bankAccountTitle || '—'} • Account: {settings.bankAccountNumber || '—'}</p>
-            <p className="mt-1 text-neutral-500">After transfer, paste the screenshot link below or send it on WhatsApp.</p>
+            <p className="mt-1 text-[#98989a]">After transfer, paste the screenshot link below or send it on WhatsApp.</p>
           </div>
         )}
         {paymentMethod === 'Easypaisa' && <p className="text-sm">Easypaisa number: <b>{settings.easypaisaNumber || '—'}</b></p>}
@@ -108,7 +121,7 @@ export default function Checkout() {
           <input className="field" placeholder="Coupon code" value={coupon} onChange={(e) => setCoupon(e.target.value)} />
           <button type="button" className="btn-outline !px-4" onClick={applyCoupon}>Apply</button>
         </div>
-        <p className="mt-2 text-xs text-neutral-400">Try WELCOME10 for 10% off.</p>
+        <p className="mt-2 text-xs text-[#98989a]">Try WELCOME10 for 10% off.</p>
       </aside>
     </div>
   );

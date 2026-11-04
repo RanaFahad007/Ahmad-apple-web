@@ -2,10 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-body { @apply bg-white text-neutral-900 antialiased; }
-.dark body { @apply bg-neutral-950 text-neutral-100; }
+html { color-scheme: dark; }
+body { @apply bg-black text-white antialiased; }
 input, select, textarea { @apply outline-none; }
-.field { @apply w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-neutral-700 dark:bg-neutral-900; }
-.btn { @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50; }
-.btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800; }
-.card { @apply rounded-3xl border border-neutral-100 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900; }
+.field { @apply w-full rounded-[20px] border border-[#2c2c2e] bg-[#1c1c1e] px-4 py-3 text-sm text-white placeholder:text-[#98989a] focus:border-[#007aff] focus:ring-2 focus:ring-[#007aff]/30; }
+.btn { @apply inline-flex items-center justify-center gap-2 rounded-full bg-[#007aff] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0062cc] disabled:opacity-50; }
+.btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-full border border-[#2c2c2e] bg-[#1c1c1e] px-6 py-3 text-sm font-semibold text-white hover:bg-[#2c2c2e]; }
+.card { @apply rounded-[20px] border border-transparent bg-[#1c1c1e] text-white shadow-none; }
+.pill { @apply inline-flex items-center rounded-full bg-[#2c2c2e] px-5 py-2.5 text-sm font-semibold text-white; }
+.pill-active { @apply inline-flex items-center rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black; }

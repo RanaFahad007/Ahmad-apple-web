@@ -10,6 +10,7 @@ export default function Home() {
   const [best, setBest] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCat, setSelectedCat] = useState('');
   usePageTitle('Home');
 
   useEffect(() => {
@@ -23,50 +24,65 @@ export default function Home() {
       setFeatured(f.data || []);
       setBest(be.data || []);
       setCategories(c.data || []);
+      const iphone = (c.data || []).find((x) => x.slug === 'iphone' || x.name.toLowerCase() === 'iphone');
+      setSelectedCat(iphone ? iphone.slug : (c.data || [])[0]?.slug || '');
       setLoading(false);
     });
   }, []);
 
   const hero = banners[0];
+  const heroImage = hero?.image || featured[0]?.images?.[0] || '';
+  const arrivals = selectedCat
+    ? featured.filter((p) => p.category?.slug === selectedCat || p.category?.name?.toLowerCase() === selectedCat)
+    : featured;
+  const shownArrivals = arrivals.length ? arrivals : featured;
+
   return (
-    <div className="space-y-12 py-6">
-      <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-[2rem] bg-apple dark:bg-neutral-900">
-        <div className="grid items-center gap-6 p-6 sm:p-10 lg:grid-cols-2">
+    <div className="space-y-8 py-6">
+      {/* Hero — dark card, like the mockup: "New / iPhone 16 Pro / Titanium. Pro." */}
+      <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-[24px] bg-[#1c1c1e]">
+        <div className="grid items-center gap-6 p-6 sm:p-8 lg:grid-cols-2">
           <div>
-            <p className="text-sm font-semibold text-accent">New arrivals are here</p>
-            <h1 className="mt-2 text-4xl font-extrabold leading-tight sm:text-5xl">{hero?.title || 'iPhone 15 Pro Max'}</h1>
-            <p className="mt-3 text-neutral-500">{hero?.subtitle || 'Titanium. So strong. So light. So Pro. Genuine Apple products with warranty support.'}</p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link to={hero?.ctaLink || '/category/iphone'} className="btn">{hero?.ctaText || 'Shop iPhone'}</Link>
-              <Link to="/shop" className="btn-outline">Shop All Products</Link>
+            <p className="text-sm text-[#98989a]">New</p>
+            <h1 className="mt-1 text-4xl font-extrabold leading-tight sm:text-5xl">{hero?.title || 'iPhone 16 Pro'}</h1>
+            <p className="mt-2 text-[#98989a]">{hero?.subtitle || 'Titanium. Pro.'}</p>
+            <div className="mt-6">
+              <Link to={hero?.ctaLink || '/category/iphone'} className="inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-bold text-black">{hero?.ctaText || 'Shop now'}</Link>
             </div>
           </div>
-          {hero?.image && <img src={hero.image} onError={imgFallback} alt={hero.title} className="aspect-[4/3] w-full rounded-3xl object-cover" />}
+          {heroImage && (
+            <div className="rounded-[20px] bg-[#2c2c2e] p-4">
+              <img src={heroImage} onError={imgFallback} alt={hero?.title || 'Featured product'} className="aspect-[4/3] w-full rounded-[16px] object-cover" />
+            </div>
+          )}
         </div>
       </motion.section>
 
+      {/* Category pills — selected pill is white, the rest dark grey */}
       <section>
-        <h2 className="text-2xl font-bold">Shop by category</h2>
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="flex gap-2 overflow-x-auto pb-1">
           {categories.map((c) => (
-            <Link key={c._id} to={`/category/${c.slug}`} className="card overflow-hidden text-center transition hover:shadow-lg">
-              <img src={c.image} onError={imgFallback} alt={c.name} loading="lazy" className="aspect-square w-full object-cover" />
-              <p className="p-3 font-semibold">{c.name}</p>
-            </Link>
+            <button
+              key={c._id}
+              onClick={() => setSelectedCat(c.slug)}
+              className={selectedCat === c.slug ? 'pill-active shrink-0' : 'pill shrink-0'}
+            >
+              {c.name}
+            </button>
           ))}
         </div>
       </section>
 
       <section>
-        <div className="flex items-end justify-between"><h2 className="text-2xl font-bold">New Arrivals</h2><Link to="/shop?sort=newest" className="text-sm font-semibold text-accent">View all →</Link></div>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {loading ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} />) : featured.map((p) => <ProductCard key={p._id} product={p} />)}
+        <div className="flex items-end justify-between"><h2 className="text-2xl font-bold">New arrivals</h2><Link to="/shop?sort=newest" className="text-sm font-semibold text-[#007aff]">See all</Link></div>
+        <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {loading ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} />) : shownArrivals.map((p) => <ProductCard key={p._id} product={p} />)}
         </div>
       </section>
 
       <section>
-        <div className="flex items-end justify-between"><h2 className="text-2xl font-bold">Best Sellers</h2><Link to="/shop?sort=popular" className="text-sm font-semibold text-accent">View all →</Link></div>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="flex items-end justify-between"><h2 className="text-2xl font-bold">Best Sellers</h2><Link to="/shop?sort=popular" className="text-sm font-semibold text-[#007aff]">See all</Link></div>
+        <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {loading ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} />) : best.map((p) => <ProductCard key={p._id} product={p} />)}
         </div>
       </section>
@@ -80,7 +96,7 @@ export default function Home() {
         ].map(([title, text]) => (
           <div key={title} className="card p-5">
             <p className="font-bold">{title}</p>
-            <p className="mt-1 text-sm text-neutral-500">{text}</p>
+            <p className="mt-1 text-sm text-[#98989a]">{text}</p>
           </div>
         ))}
       </section>

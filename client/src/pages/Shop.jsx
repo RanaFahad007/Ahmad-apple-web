@@ -49,6 +49,8 @@ export default function Shop() {
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [drawer, setDrawer] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchInput, setSearchInput] = useState(query.search || '');
   usePageTitle(slug ? slug : 'Shop');
 
   const query = Object.fromEntries(searchParams.entries());
@@ -70,22 +72,63 @@ export default function Shop() {
     setSearchParams(next);
   };
 
+  const toggleFilter = (patch) => {
+    const next = { ...query };
+    Object.keys(patch).forEach((k) => {
+      if (next[k] === patch[k]) delete next[k]; else next[k] = patch[k];
+    });
+    delete next.page;
+    setSearchParams(next);
+  };
+
+  const categoryName = categories.find((c) => c.slug === slug)?.name || (slug ? slug.replace('-', ' ') : 'Shop All');
+
   return (
     <div className="py-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-extrabold capitalize">{slug ? slug.replace('-', ' ') : 'Shop All'}</h1>
-        <button className="btn-outline !px-4 !py-2 lg:hidden" onClick={() => setDrawer(true)}>Filters</button>
+        <h1 className="text-3xl font-extrabold capitalize">{categoryName}</h1>
+        <button className="rounded-full bg-[#1c1c1e] px-3 py-2 text-lg" aria-label="Search" onClick={() => setShowSearch(!showSearch)}>🔍</button>
+      </div>
+      {showSearch && (
+        <form
+          className="mt-4 flex gap-2"
+          onSubmit={(e) => { e.preventDefault(); update({ search: searchInput || undefined }); }}
+        >
+          <input className="field" placeholder="Search products" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
+          <button className="btn !px-5" type="submit">Search</button>
+        </form>
+      )}
+      {/* Pills — Filter is white (selected look), Sort / storage / condition are dark until active */}
+      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+        <button className="pill-active shrink-0" onClick={() => setDrawer(true)}>Filter</button>
+        <label className="pill shrink-0">
+          <span className="mr-1">Sort</span>
+          <select
+            className="bg-transparent text-sm font-semibold outline-none [&>option]:text-black"
+            value={filters.sort || 'newest'}
+            onChange={(e) => update({ sort: e.target.value })}
+            aria-label="Sort products"
+          >
+            <option value="newest">Newest</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="popular">Most Popular</option>
+            <option value="rating">Highest Rated</option>
+          </select>
+        </label>
+        <button className={filters.storage === '256GB' ? 'pill-active shrink-0' : 'pill shrink-0'} onClick={() => toggleFilter({ storage: '256GB' })}>256GB</button>
+        <button className={filters.condition === 'New' ? 'pill-active shrink-0' : 'pill shrink-0'} onClick={() => toggleFilter({ condition: 'New' })}>New</button>
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-[260px_1fr]">
         <aside className="hidden lg:block"><div className="card sticky top-32 p-5"><Filters value={filters} onChange={update} categories={categories} /></div></aside>
         <div>
           {loading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} />)}</div>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} />)}</div>
           ) : products.length === 0 ? (
             <Empty title="No products found" text="Try removing a filter or searching for something else." />
           ) : (
             <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {products.map((p) => <ProductCard key={p._id} product={p} />)}
               </div>
               {pagination && pagination.pages > 1 && (
@@ -101,7 +144,7 @@ export default function Shop() {
       </div>
       {drawer && (
         <div className="fixed inset-0 z-50 bg-black/40 lg:hidden" onClick={() => setDrawer(false)}>
-          <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-3xl bg-white p-5 dark:bg-neutral-900" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-3xl bg-[#1c1c1e] p-5" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex justify-between"><p className="font-bold">Filters</p><button onClick={() => setDrawer(false)}>✕</button></div>
             <Filters value={filters} onChange={(p) => { update(p); }} categories={categories} />
             <button className="btn mt-5 w-full" onClick={() => setDrawer(false)}>Show results</button>

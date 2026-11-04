@@ -24,12 +24,12 @@ export function ProductList() {
       </div>
       <div className="hidden overflow-x-auto rounded-3xl border md:block">
         <table className="w-full text-sm">
-          <thead><tr className="bg-apple text-left dark:bg-neutral-800"><th className="p-3"></th><th className="p-3">Product</th><th className="p-3">Price</th><th className="p-3">Stock</th><th className="p-3">Active</th><th className="p-3">Actions</th></tr></thead>
+          <thead><tr className="bg-[#1c1c1e] text-left "><th className="p-3"></th><th className="p-3">Product</th><th className="p-3">Price</th><th className="p-3">Stock</th><th className="p-3">Active</th><th className="p-3">Actions</th></tr></thead>
           <tbody>
             {products.map((p) => (
               <tr key={p._id} className="border-t">
                 <td className="p-3"><input type="checkbox" checked={selected.includes(p._id)} onChange={() => toggle(p._id)} /></td>
-                <td className="p-3 font-semibold">{p.name}<p className="text-xs font-normal text-neutral-400">{p.category?.name || ''}</p></td>
+                <td className="p-3 font-semibold">{p.name}<p className="text-xs font-normal text-[#98989a]">{p.category?.name || ''}</p></td>
                 <td className="p-3">{formatPKR(p.salePrice > 0 ? p.salePrice : p.price)}</td>
                 <td className="p-3">{p.stock}</td>
                 <td className="p-3">{p.isActive ? 'Yes' : 'No'}</td>
@@ -47,7 +47,7 @@ export function ProductList() {
         {products.map((p) => (
           <div key={p._id} className="card p-4">
             <p className="font-bold">{p.name}</p>
-            <p className="text-sm text-neutral-500">{formatPKR(p.salePrice > 0 ? p.salePrice : p.price)} • Stock {p.stock} • {p.isActive ? 'Active' : 'Hidden'}</p>
+            <p className="text-sm text-[#98989a]">{formatPKR(p.salePrice > 0 ? p.salePrice : p.price)} • Stock {p.stock} • {p.isActive ? 'Active' : 'Hidden'}</p>
             <div className="mt-2 space-x-3 text-sm">
               <Link to={`/admin-ahmad/products/${p._id}`} className="text-accent">Edit</Link>
               <button className="text-accent" onClick={async () => { await post(`/admin/products/${p._id}/duplicate`, {}); load(); }}>Duplicate</button>
@@ -132,11 +132,11 @@ export function ProductForm({ id }) {
       <textarea className="field" rows={4} placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
       <div>
         <p className="font-semibold">Images</p>
-        <p className="text-xs text-neutral-400">Paste image URLs (one per line), and/or upload new images below. Use ↑ / ↓ to reorder URL images.</p>
+        <p className="text-xs text-[#98989a]">Paste image URLs (one per line), and/or upload new images below. Use ↑ / ↓ to reorder URL images.</p>
         <textarea className="field mt-2" rows={3} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
         <div className="mt-2 flex flex-wrap gap-2">
           {form.images.split('\n').filter(Boolean).map((src, i) => (
-            <span key={i} className="flex items-center gap-1 rounded-full bg-apple px-2 py-1 text-xs dark:bg-neutral-800">
+            <span key={i} className="flex items-center gap-1 rounded-full bg-[#1c1c1e] px-2 py-1 text-xs ">
               {i + 1}. {src.slice(0, 30)}…
               <button type="button" onClick={() => moveImage(i, -1)}>↑</button>
               <button type="button" onClick={() => moveImage(i, 1)}>↓</button>

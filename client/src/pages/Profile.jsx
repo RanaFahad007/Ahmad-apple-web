@@ -40,7 +40,7 @@ export default function Profile() {
           <h2 className="font-bold">Edit profile</h2>
           <input className="field" value={name} onChange={(e) => setName(e.target.value)} required />
           <input className="field" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" />
-          <p className="text-sm text-neutral-500">Email: {profile?.email}</p>
+          <p className="text-sm text-[#98989a]">Email: {profile?.email}</p>
           <button className="btn">Save Profile</button>
         </form>
         <form onSubmit={saveAddress} className="card space-y-3 p-5">
@@ -53,7 +53,7 @@ export default function Profile() {
           <button className="btn">Save Address</button>
           <div className="space-y-2 pt-2">
             {(profile?.addresses || []).map((a) => (
-              <div key={a._id} className="flex justify-between rounded-xl bg-apple p-3 text-sm dark:bg-neutral-800">
+              <div key={a._id} className="flex justify-between rounded-xl bg-[#1c1c1e] p-3 text-sm ">
                 <span><b>{a.label}</b> — {a.fullName}, {a.city}, {a.address}</span>
                 <button type="button" className="text-red-600" onClick={async () => { await del(`/auth/addresses/${a._id}`); setProfile((p) => ({ ...p, addresses: p.addresses.filter((x) => x._id !== a._id) })); }}>Remove</button>
               </div>
@@ -64,20 +64,20 @@ export default function Profile() {
 
       <section>
         <h2 className="text-2xl font-bold">Order history &amp; tracking</h2>
-        {orders.length === 0 && <p className="mt-2 text-sm text-neutral-500">No orders yet. <Link to="/shop" className="text-accent">Shop now</Link></p>}
+        {orders.length === 0 && <p className="mt-2 text-sm text-[#98989a]">No orders yet. <Link to="/shop" className="text-accent">Shop now</Link></p>}
         <div className="mt-4 space-y-3">
           {orders.map((o) => (
             <div key={o._id} className="card p-5">
               <div className="flex flex-wrap justify-between gap-2">
                 <p className="font-bold">{o.orderNumber}</p>
-                <p className="text-sm text-neutral-500">{new Date(o.createdAt).toLocaleDateString()} • {formatPKR(o.total)}</p>
+                <p className="text-sm text-[#98989a]">{new Date(o.createdAt).toLocaleDateString()} • {formatPKR(o.total)}</p>
               </div>
               <div className="mt-3 flex flex-wrap gap-1">
                 {STATUSES.map((s) => (
-                  <span key={s} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${o.status === s ? 'bg-accent text-white' : STATUSES.indexOf(s) < STATUSES.indexOf(o.status) ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-400'}`}>{s}</span>
+                  <span key={s} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${o.status === s ? 'bg-accent text-white' : STATUSES.indexOf(s) < STATUSES.indexOf(o.status) ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-[#98989a]'}`}>{s}</span>
                 ))}
               </div>
-              <p className="mt-2 text-sm text-neutral-500">Status: <b>{o.status}</b>{o.trackingNumber ? ` • Tracking: ${o.trackingNumber}` : ''} • Payment: {o.paymentMethod} ({o.paymentStatus})</p>
+              <p className="mt-2 text-sm text-[#98989a]">Status: <b>{o.status}</b>{o.trackingNumber ? ` • Tracking: ${o.trackingNumber}` : ''} • Payment: {o.paymentMethod} ({o.paymentStatus})</p>
               <ul className="mt-2 list-disc pl-5 text-sm">{o.items.map((i, idx) => <li key={idx}>{i.name} × {i.quantity}</li>)}</ul>
             </div>
           ))}

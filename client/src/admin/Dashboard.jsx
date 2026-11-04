@@ -19,7 +19,7 @@ export default function Dashboard() {
       <h1 className="text-3xl font-extrabold">Dashboard</h1>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {cards.map(([label, value]) => (
-          <div key={label} className="card p-4"><p className="text-sm text-neutral-500">{label}</p><p className="mt-1 text-xl font-extrabold">{value}</p></div>
+          <div key={label} className="card p-4"><p className="text-sm text-[#98989a]">{label}</p><p className="mt-1 text-xl font-extrabold">{value}</p></div>
         ))}
       </div>
       <div className="card p-5">
@@ -28,7 +28,7 @@ export default function Dashboard() {
           {(d.revenueByDay || []).map((x) => (
             <div key={x._id} className="flex-1" title={`${x._id}: ${formatPKR(x.revenue)}`}>
               <div className="rounded-t bg-accent" style={{ height: `${Math.max(4, (x.revenue / maxRev) * 140)}px` }} />
-              <p className="mt-1 truncate text-[10px] text-neutral-400">{x._id.slice(5)}</p>
+              <p className="mt-1 truncate text-[10px] text-[#98989a]">{x._id.slice(5)}</p>
             </div>
           ))}
         </div>
@@ -36,7 +36,7 @@ export default function Dashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card p-5">
           <h2 className="font-bold">Low stock alerts</h2>
-          {(d.lowStock || []).length === 0 && <p className="mt-2 text-sm text-neutral-500">No low-stock products.</p>}
+          {(d.lowStock || []).length === 0 && <p className="mt-2 text-sm text-[#98989a]">No low-stock products.</p>}
           <ul className="mt-2 space-y-1 text-sm">{(d.lowStock || []).map((p) => <li key={p._id}>{p.name} — <b>{p.stock} left</b></li>)}</ul>
         </div>
         <div className="card p-5">
@@ -48,7 +48,7 @@ export default function Dashboard() {
         <h2 className="font-bold">Recent orders</h2>
         <div className="mt-3 space-y-2">
           {(d.recentOrders || []).map((o) => (
-            <Link key={o._id} to="/admin-ahmad/orders" className="flex justify-between rounded-xl bg-apple px-3 py-2 text-sm dark:bg-neutral-800">
+            <Link key={o._id} to="/admin-ahmad/orders" className="flex justify-between rounded-xl bg-[#1c1c1e] px-3 py-2 text-sm ">
               <span>{o.orderNumber} — {o.customerName}</span><span>{o.status} • {formatPKR(o.total)}</span>
             </Link>
           ))}

@@ -54,7 +54,7 @@ export function AdminLogin() {
   return (
     <div className="mx-auto max-w-md py-16">
       <h1 className="text-3xl font-extrabold">Admin Login</h1>
-      <p className="mt-1 text-sm text-neutral-500">Admin access only. This page is not linked from the public site.</p>
+      <p className="mt-1 text-sm text-[#98989a]">Admin access only. This page is not linked from the public site.</p>
       <form onSubmit={submit} className="card mt-5 space-y-3 p-5">
         {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         <input className="field" type="email" placeholder="Admin email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
@@ -72,7 +72,7 @@ export default function AdminLayout() {
   return (
     <AdminGuard>
       <div className="flex min-h-screen">
-        <aside className={`shrink-0 border-r bg-white transition-all dark:bg-neutral-950 ${collapsed ? 'w-14' : 'w-56'} max-lg:fixed max-lg:z-50 max-lg:h-full ${collapsed ? 'max-lg:-translate-x-full' : ''}`}>
+        <aside className={`shrink-0 border-r bg-[#1c1c1e] transition-all dark:bg-neutral-950 ${collapsed ? 'w-14' : 'w-56'} max-lg:fixed max-lg:z-50 max-lg:h-full ${collapsed ? 'max-lg:-translate-x-full' : ''}`}>
           <div className="flex items-center justify-between p-4">
             {!collapsed && <p className="font-extrabold">Admin</p>}
             <button className="rounded-full border px-2 py-1" onClick={() => setCollapsed(!collapsed)} aria-label="Toggle sidebar">{collapsed ? '→' : '←'}</button>

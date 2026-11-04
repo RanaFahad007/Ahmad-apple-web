@@ -15,7 +15,7 @@ export default function Wishlist() {
   return (
     <div className="py-6">
       <h1 className="text-3xl font-bold">My Wishlist</h1>
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">{products.map((p) => <ProductCard key={p._id} product={p} />)}</div>
+      <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">{products.map((p) => <ProductCard key={p._id} product={p} />)}</div>
     </div>
   );
 }

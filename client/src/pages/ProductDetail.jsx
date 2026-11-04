@@ -1,9 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { get, post, formatPKR, imgFallback, usePageTitle } from '../lib/api.js';
-import { useAuthStore, useCartStore } from '../store/useStore.js';
+import { useAuthStore, useCartStore, useWishlistStore } from '../store/useStore.js';
 import { Empty, ProductCard, Stars } from '../components/ui.jsx';
+
+function colorHex(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('black') || n.includes('midnight')) return '#1c1c1e';
+  if (n.includes('white') || n.includes('starlight')) return '#f5f5f7';
+  if (n.includes('blue') || n.includes('sierra') || n.includes('titanium blue')) return '#6b8cae';
+  if (n.includes('gold') || n.includes('titanium') || n.includes('desert') || n.includes('beige') || n.includes('natural')) return '#d9c7a5';
+  if (n.includes('grey') || n.includes('gray') || n.includes('silver')) return '#c7c7cc';
+  if (n.includes('pink') || n.includes('rose')) return '#e8b4b8';
+  if (n.includes('green')) return '#7ba17d';
+  if (n.includes('red')) return '#c0392b';
+  if (n.includes('purple') || n.includes('violet')) return '#9b8ec4';
+  if (n.includes('yellow')) return '#e6c85a';
+  if (n.includes('orange')) return '#e67e22';
+  return '#8e8e93';
+}
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -18,6 +34,8 @@ export default function ProductDetail() {
   const [comment, setComment] = useState('');
   const add = useCartStore((s) => s.add);
   const user = useAuthStore((s) => s.user);
+  const navigate = useNavigate();
+  const { ids: wishedIds, toggle: toggleWish } = useWishlistStore();
   usePageTitle(data?.product?.name || 'Product');
 
   useEffect(() => {
@@ -35,6 +53,8 @@ export default function ProductDetail() {
   const price = product.salePrice > 0 ? product.salePrice : product.price;
   const colors = [...new Set(product.variants.map((v) => v.color).filter(Boolean))];
   const storages = [...new Set(product.variants.map((v) => v.storage).filter(Boolean))];
+  const wished = wishedIds.includes(product._id);
+  const addToBag = () => { add(product, { color, storage, condition, quantity: qty }); toast.success('Added to bag'); };
 
   const submitReview = async (e) => {
     e.preventDefault();
@@ -46,57 +66,61 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="space-y-10 py-6">
+    <div className="space-y-10 pb-24 pt-6 md:pb-6">
+      {/* Back + wishlist, like the mockup */}
+      <div className="flex items-center justify-between">
+        <button onClick={() => navigate(-1)} aria-label="Back" className="rounded-full bg-[#1c1c1e] px-4 py-2 text-lg">‹</button>
+        <button onClick={() => toggleWish(product._id)} aria-label="Toggle wishlist" className={`rounded-full bg-[#1c1c1e] px-4 py-2 text-lg ${wished ? 'text-red-500' : 'text-white'}`}>{wished ? '♥' : '♡'}</button>
+      </div>
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
-          <div className="overflow-hidden rounded-3xl bg-apple" onClick={() => setZoom(!zoom)}>
-            <img src={product.images?.[image] || ''} onError={imgFallback} alt={product.name} className={`w-full cursor-zoom-in object-cover transition ${zoom ? 'scale-150' : 'aspect-square'}`} />
+          <div className="overflow-hidden rounded-[24px] bg-[#2c2c2e] p-4" onClick={() => setZoom(!zoom)}>
+            <img src={product.images?.[image] || ''} onError={imgFallback} alt={product.name} className={`w-full cursor-zoom-in rounded-[16px] object-cover transition ${zoom ? 'scale-150' : 'aspect-square'}`} />
           </div>
           <div className="mt-3 flex gap-2 overflow-x-auto">
             {product.images?.map((src, i) => (
-              <button key={i} onClick={() => setImage(i)} className={`shrink-0 overflow-hidden rounded-2xl border-2 ${image === i ? 'border-accent' : 'border-transparent'}`}>
+              <button key={i} onClick={() => setImage(i)} className={`shrink-0 overflow-hidden rounded-2xl border-2 ${image === i ? 'border-[#007aff]' : 'border-transparent'}`}>
                 <img src={src} onError={imgFallback} alt="" className="h-20 w-20 object-cover" />
               </button>
             ))}
           </div>
-          <p className="mt-2 text-xs text-neutral-400">Tap the main image to zoom.</p>
+          <p className="mt-2 text-xs text-[#98989a]">Tap the main image to zoom.</p>
         </div>
         <div>
-          <p className="text-sm font-semibold text-accent">{product.category?.name || ''} • {product.brandName}</p>
-          <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">{product.name}</h1>
-          <div className="mt-2"><Stars value={product.rating} /> <span className="text-sm text-neutral-500">({product.numReviews} reviews)</span></div>
-          <div className="mt-4 flex items-baseline gap-3">
-            <span className="text-3xl font-extrabold">{formatPKR(price)}</span>
-            {product.salePrice > 0 && <span className="text-lg text-neutral-400 line-through">{formatPKR(product.price)}</span>}
+          <p className="text-sm font-semibold text-[#007aff]">{product.category?.name || ''} • {product.brandName}</p>
+          <div className="mt-1 flex items-start justify-between gap-4">
+            <h1 className="text-3xl font-extrabold sm:text-4xl">{product.name}</h1>
+            <span className="shrink-0 text-xl font-extrabold sm:text-2xl">{formatPKR(price)}</span>
           </div>
-          <p className={`mt-2 font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>{product.stock > 0 ? `In stock — ${product.stock} available` : 'Out of stock'}</p>
-          <p className="mt-4 text-neutral-600 dark:text-neutral-300">{product.description}</p>
+          <div className="mt-2"><Stars value={product.rating} /> <span className="text-sm text-[#98989a]">({product.numReviews} reviews)</span></div>
+          {product.salePrice > 0 && <p className="mt-1 text-lg text-[#98989a] line-through">{formatPKR(product.price)}</p>}
+          <p className={`mt-2 font-medium ${product.stock > 0 ? 'text-green-500' : 'text-red-500'}`}>{product.stock > 0 ? 'In stock' : 'Out of stock'}</p>
+          <p className="mt-4 text-[#d1d1d6]">{product.description}</p>
 
           {colors.length > 0 && (
-            <div className="mt-5"><p className="font-semibold">Colour</p><div className="mt-2 flex flex-wrap gap-2">{colors.map((c) => <button key={c} onClick={() => setColor(c)} className={`rounded-full border px-4 py-2 text-sm ${color === c ? 'border-accent bg-accent/10' : ''}`}>{c}</button>)}</div></div>
+            <div className="mt-5"><p className="text-[#98989a]">Color{color ? ` — ${color}` : ''}</p><div className="mt-2 flex flex-wrap gap-3">{colors.map((c) => <button key={c} onClick={() => setColor(c)} aria-label={c} title={c} className={`h-10 w-10 rounded-full border border-[#2c2c2e] ${color === c ? 'ring-2 ring-[#007aff] ring-offset-2 ring-offset-black' : ''}`} style={{ backgroundColor: colorHex(c) }} />)}</div></div>
           )}
           {storages.length > 0 && (
-            <div className="mt-4"><p className="font-semibold">Storage</p><div className="mt-2 flex flex-wrap gap-2">{storages.map((s) => <button key={s} onClick={() => setStorage(s)} className={`rounded-full border px-4 py-2 text-sm ${storage === s ? 'border-accent bg-accent/10' : ''}`}>{s}</button>)}</div></div>
+            <div className="mt-4"><p className="text-[#98989a]">Storage</p><div className="mt-2 flex flex-wrap gap-2">{storages.map((s) => <button key={s} onClick={() => setStorage(s)} className={storage === s ? 'pill-active' : 'pill'}>{s}</button>)}</div></div>
           )}
-          <div className="mt-4"><p className="font-semibold">Condition</p><div className="mt-2 flex flex-wrap gap-2">{['New', 'Used', 'Open Box'].map((c) => <button key={c} onClick={() => setCondition(c)} className={`rounded-full border px-4 py-2 text-sm ${condition === c ? 'border-accent bg-accent/10' : ''}`}>{c}</button>)}</div></div>
+          <div className="mt-4"><p className="text-[#98989a]">Condition</p><div className="mt-2 flex flex-wrap gap-2">{['New', 'Used', 'Open Box'].map((c) => <button key={c} onClick={() => setCondition(c)} className={condition === c ? 'pill-active' : 'pill'}>{c === 'Open Box' ? 'Open box' : c}</button>)}</div></div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="flex items-center rounded-full border">
+          <div className="mt-6 hidden flex-wrap items-center gap-3 md:flex">
+            <div className="flex items-center rounded-full border border-[#2c2c2e] bg-[#1c1c1e]">
               <button className="px-4 py-3" onClick={() => setQty(Math.max(1, qty - 1))}>−</button>
               <span className="w-8 text-center font-bold">{qty}</span>
               <button className="px-4 py-3" onClick={() => setQty(Math.min(product.stock || 99, qty + 1))}>+</button>
             </div>
-            <button
-              className="btn"
-              disabled={product.stock <= 0}
-              onClick={() => { add(product, { color, storage, condition, quantity: qty }); toast.success('Added to cart'); }}
-            >
-              Add to Cart
-            </button>
+            <button className="btn flex-1" disabled={product.stock <= 0} onClick={addToBag}>Add to bag</button>
             <Link to="/cart" className="btn-outline" onClick={() => { add(product, { color, storage, condition, quantity: qty }); }}>Buy Now</Link>
           </div>
-          <p className="mt-3 text-sm text-neutral-500">SKU: {product.sku || '—'} • Free delivery over Rs 50,000 • Cash on Delivery available</p>
+          <p className="mt-3 hidden text-sm text-[#98989a] md:block">SKU: {product.sku || '—'} • Free delivery over Rs 50,000 • Cash on Delivery available</p>
         </div>
+      </div>
+
+      {/* Pinned Add to bag bar on mobile (above the bottom nav) */}
+      <div className="fixed bottom-16 left-0 right-0 z-30 bg-black/90 p-4 md:hidden">
+        <button className="btn w-full !py-4 !text-base" disabled={product.stock <= 0} onClick={addToBag}>Add to bag</button>
       </div>
 
       {product.specs && Object.keys(product.specs).length > 0 && (
@@ -105,7 +129,7 @@ export default function ProductDetail() {
           <table className="mt-3 w-full text-sm">
             <tbody>
               {Object.entries(product.specs).map(([k, v]) => (
-                <tr key={k} className="border-t"><td className="py-2 pr-4 font-semibold text-neutral-500">{k}</td><td className="py-2">{v}</td></tr>
+                <tr key={k} className="border-t"><td className="py-2 pr-4 font-semibold text-[#98989a]">{k}</td><td className="py-2">{v}</td></tr>
               ))}
             </tbody>
           </table>
@@ -114,28 +138,28 @@ export default function ProductDetail() {
 
       <section className="card p-5">
         <h2 className="text-xl font-bold">Reviews</h2>
-        {reviews.length === 0 && <p className="mt-2 text-sm text-neutral-500">No approved reviews yet.</p>}
+        {reviews.length === 0 && <p className="mt-2 text-sm text-[#98989a]">No approved reviews yet.</p>}
         <div className="mt-3 space-y-3">
           {reviews.map((r) => (
-            <div key={r._id} className="border-t pt-3"><Stars value={r.rating} /><p className="mt-1">{r.comment}</p><p className="text-xs text-neutral-400">by {r.userName}</p></div>
+            <div key={r._id} className="border-t border-[#2c2c2e] pt-3"><Stars value={r.rating} /><p className="mt-1">{r.comment}</p><p className="text-xs text-[#98989a]">by {r.userName}</p></div>
           ))}
         </div>
         {user ? (
-          <form onSubmit={submitReview} className="mt-5 space-y-3 border-t pt-4">
-            <p className="font-semibold">Write a review <span className="text-xs font-normal text-neutral-400">(only customers who purchased can review)</span></p>
+          <form onSubmit={submitReview} className="mt-5 space-y-3 border-t border-[#2c2c2e] pt-4">
+            <p className="font-semibold">Write a review <span className="text-xs font-normal text-[#98989a]">(only customers who purchased can review)</span></p>
             <select className="field" value={rating} onChange={(e) => setRating(Number(e.target.value))}>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} stars</option>)}</select>
             <textarea className="field" rows={3} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="How was the product?" required />
             <button className="btn">Submit Review</button>
           </form>
         ) : (
-          <p className="mt-4 text-sm text-neutral-500"><Link to="/login" className="font-semibold text-accent">Log in</Link> to write a review after purchase.</p>
+          <p className="mt-4 text-sm text-[#98989a]"><Link to="/login" className="font-semibold text-accent">Log in</Link> to write a review after purchase.</p>
         )}
       </section>
 
       {related.length > 0 && (
         <section>
           <h2 className="text-2xl font-bold">Related products</h2>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">{related.map((p) => <ProductCard key={p._id} product={p} />)}</div>
+          <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">{related.map((p) => <ProductCard key={p._id} product={p} />)}</div>
         </section>
       )}
     </div>

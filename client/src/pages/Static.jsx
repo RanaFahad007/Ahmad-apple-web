@@ -4,7 +4,7 @@ import { post, usePageTitle } from '../lib/api.js';
 
 function Page({ title, children }) {
   usePageTitle(title);
-  return <div className="mx-auto max-w-3xl py-8"><h1 className="text-3xl font-extrabold">{title}</h1><div className="card mt-5 space-y-4 p-6 text-neutral-600 dark:text-neutral-300">{children}</div></div>;
+  return <div className="mx-auto max-w-3xl py-8"><h1 className="text-3xl font-extrabold">{title}</h1><div className="card mt-5 space-y-4 p-6 text-[#d1d1d6] dark:text-neutral-300">{children}</div></div>;
 }
 
 export const About = () => (
@@ -62,5 +62,5 @@ export function Contact() {
 
 export function NotFound() {
   usePageTitle('Page Not Found');
-  return <div className="py-20 text-center"><h1 className="text-4xl font-extrabold">404</h1><p className="mt-2 text-neutral-500">This page does not exist.</p><a href="/" className="btn mt-5 inline-flex">Go home</a></div>;
+  return <div className="py-20 text-center"><h1 className="text-4xl font-extrabold">404</h1><p className="mt-2 text-[#98989a]">This page does not exist.</p><a href="/" className="btn mt-5 inline-flex">Go home</a></div>;
 }
