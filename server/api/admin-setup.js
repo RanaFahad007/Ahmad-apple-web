@@ -1,7 +1,8 @@
 import { connectDB } from '../src/config/db.js';
 import User from '../src/models/User.js';
 
-// One-time admin bootstrap endpoint. It only works when ADMIN_SETUP_TOKEN is
+// One-time admin bootstrap endpoint (production redeploy with token env).
+// It only works when ADMIN_SETUP_TOKEN is
 // set in the deployment environment and the caller sends the same token in
 // x-admin-token. It is removed from the repository after the first successful
 // use, and the token environment variable is then inert (endpoint gone).
