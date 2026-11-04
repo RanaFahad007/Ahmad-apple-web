@@ -94,7 +94,8 @@ export const updateSettings = asyncHandler(async (req, res) => {
 });
 
 export const createMessage = asyncHandler(async (req, res) => {
-  const doc = await Message.create(req.body);
+  // Contact is now login-only, so every message is linked to a registered user.
+  const doc = await Message.create({ ...req.body, user: req.user._id, email: req.user.email, name: req.body.name || req.user.name });
   return sendSuccess(res, doc, 'Message sent. We will reply soon.', 201);
 });
 

@@ -42,7 +42,7 @@ router.get('/settings', misc.getSettingsPublic);
 router.get('/products', products.listProducts);
 router.get('/products/suggestions', products.searchSuggestions);
 router.get('/products/:slug', products.getProduct);
-router.post('/messages', [body('name').notEmpty(), body('email').isEmail(), body('message').notEmpty()], validate, misc.createMessage);
+router.post('/messages', protect, [body('name').notEmpty(), body('email').isEmail(), body('message').notEmpty()], validate, misc.createMessage);
 router.post('/coupons/validate', misc.validateCoupon);
 router.post('/reviews', protect, misc.createReview);
 

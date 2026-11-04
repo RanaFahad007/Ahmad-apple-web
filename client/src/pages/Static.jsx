@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { post, usePageTitle } from '../lib/api.js';
+import { useAuthStore } from '../store/useStore.js';
+import { LoginGate } from '../components/ui.jsx';
 
 function Page({ title, children }) {
   usePageTitle(title);
@@ -40,11 +42,13 @@ export const Privacy = () => (
 );
 
 export function Contact() {
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const user = useAuthStore((s) => s.user);
+  const [form, setForm] = useState({ name: user?.name || '', email: user?.email || '', subject: '', message: '' });
   usePageTitle('Contact Us');
+  if (!user) return <LoginGate title="Contact Us" text="Message bhejne ke liye pehle login ya register karein, taake aapka message aapke account se linked save ho aur hum aapko reply de sakein." from="/contact" />;
   const submit = async (e) => {
     e.preventDefault();
-    try { await post('/messages', form); toast.success('Message sent. We will reply soon.'); setForm({ name: '', email: '', subject: '', message: '' }); } catch (err) { toast.error(err.message); }
+    try { await post('/messages', form); toast.success('Message sent. We will reply soon.'); setForm({ name: user.name || '', email: user.email || '', subject: '', message: '' }); } catch (err) { toast.error(err.message); }
   };
   return (
     <div className="mx-auto max-w-2xl py-8">
