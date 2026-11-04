@@ -23,7 +23,13 @@ function colorHex(name) {
 
 export default function ProductDetail() {
   const { slug } = useParams();
-  const [data, setData] = useState(null);
+  // undefined = still loading, null = genuinely not found, '' = fetch failed.
+  // The old code used null for both "loading" and "failed", so the page
+  // flashed "Product not found" on every visit — and a single transient
+  // API failure (e.g. a cold serverless start) left it stuck on that
+  // message with no way back.
+  const [data, setData] = useState(undefined);
+  const [error, setError] = useState('');
   const [image, setImage] = useState(0);
   const [zoom, setZoom] = useState(false);
   const [color, setColor] = useState('');
@@ -39,15 +45,22 @@ export default function ProductDetail() {
   usePageTitle(data?.product?.name || 'Product');
 
   useEffect(() => {
+    setData(undefined);
+    setError('');
     get(`/products/${slug}`).then((r) => {
       setData(r.data);
       const v = r.data.product.variants?.[0];
       if (v) { setColor(v.color); setStorage(v.storage); setCondition(v.condition); }
-    }).catch(() => setData(null));
+    }).catch((e) => { setData(null); setError(e.message); });
   }, [slug]);
 
-  if (data === null) return <div className="py-10"><Empty title="Product not found" text="This product may have been removed or hidden." /></div>;
-  if (!data) return <p className="py-10 text-center">Loading…</p>;
+  if (data === undefined) return <p className="py-10 text-center">Loading…</p>;
+  if (data === null) return (
+    <div className="py-10 text-center">
+      <Empty title="Product not found" text={error ? `Could not load this product (${error}). This product may have been removed or hidden.` : 'This product may have been removed or hidden.'} />
+      {error && <button className="btn mt-4" onClick={() => { setData(undefined); setError(''); get(`/products/${slug}`).then((r) => setData(r.data)).catch((e) => { setData(null); setError(e.message); }); }}>Retry</button>}
+    </div>
+  );
 
   const { product, related, reviews } = data;
   const price = product.salePrice > 0 ? product.salePrice : product.price;
